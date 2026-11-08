@@ -61,7 +61,7 @@ export class AuthPage {
       ? this.auth.register({ name: this.name.trim(), email: this.email.trim(), password: this.password, phone: this.phone.trim() || undefined, lang: this.i18n.lang() })
       : this.auth.login(this.email.trim(), this.password);
     req.subscribe({
-      next: () => { this.busy.set(false); this.router.navigate(['/accueil']); },
+      next: () => { this.busy.set(false); this.router.navigate([this.register ? '/configuration' : '/accueil']); },
       error: (e) => { this.busy.set(false); this.error.set(errCode(e)); },
     });
   }

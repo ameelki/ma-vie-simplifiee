@@ -5,6 +5,7 @@ export const routes: Routes = [
   { path: 'bienvenue', loadComponent: () => import('./pages/welcome.page').then((m) => m.WelcomePage) },
   { path: 'connexion', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'login' } },
   { path: 'inscription', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'register' } },
+  { path: 'configuration', canActivate: [loggedIn], loadComponent: () => import('./pages/setup.page').then((m) => m.SetupPage) },
   {
     path: '',
     canActivate: [loggedIn],

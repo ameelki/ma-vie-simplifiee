@@ -28,6 +28,14 @@ import { IconComponent } from '../shared/icon.component';
           <button class="btn wide" type="submit" [disabled]="!name.trim()">{{ 'c.save' | t }}</button>
         </div>
       </form>
+      <form class="card" (ngSubmit)="saveSetup()">
+        <h2>{{ 'setup.cardTitle' | t }}</h2>
+        <div class="form">
+          <label class="f wide">{{ 'bp.balance' | t }}<input name="balance" type="number" step="0.01" inputmode="decimal" [(ngModel)]="balance" placeholder="0.00"></label>
+          <label class="f wide">{{ 'setup.salary' | t }}<input name="salary" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="salary" placeholder="0.00"></label>
+          <button class="btn wide" type="submit">{{ 'c.save' | t }}</button>
+        </div>
+      </form>
       <div class="card stack">
         <a class="btn ghost" routerLink="/premium">{{ 'pr.subscription' | t }}</a>
         <a class="btn ghost" routerLink="/notifications">{{ 'pr.notifications' | t }}</a>
@@ -78,6 +86,15 @@ export class ProfilePage {
     this.api.put<void>('/me/password', { current: this.pwCurrent, password: this.pwNew }).subscribe({
       next: () => { this.pwCurrent = ''; this.pwNew = ''; this.toast.show(this.i18n.t('pr.pwChanged')); },
       error: (e) => this.pwError.set(errCode(e)),
+    });
+  }
+
+  balance: number | null = this.auth.user()?.openingBalance ?? null;
+  salary: number | null = this.auth.user()?.monthlyIncome ?? null;
+  private num(v: unknown): number | null { return v === null || v === undefined || (v as string) === '' ? null : Number(v); }
+  saveSetup() {
+    this.api.put<User>('/me/setup', { openingBalance: this.num(this.balance), monthlyIncome: this.num(this.salary) }).subscribe({
+      next: (u) => { this.auth.setUser(u); this.toast.show(this.i18n.t('pr.saved')); },
     });
   }
 

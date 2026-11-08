@@ -15,6 +15,10 @@ import { IconComponent } from '../shared/icon.component';
       <h1>{{ 'home.hello' | t: { name: first() } }}</h1>
       <p class="muted" style="margin:0">{{ 'home.sub' | t }}</p>
     </div>
+    @if (needSetup()) {
+      <div class="banner" style="margin-bottom:1rem"><span class="grow">{{ 'setup.banner' | t }}</span>
+        <a class="btn small" routerLink="/configuration">{{ 'setup.go' | t }}</a></div>
+    }
     @if (data.entries().length === 0 && !data.loading()) {
       <div class="card" style="margin-bottom:1rem">
         <p>{{ 'home.demoHint' | t }}</p>
@@ -52,6 +56,13 @@ export class HomePage implements OnInit {
 
   ngOnInit() { if (this.data.ownerId() !== null) this.data.select(null); }
 
+  /** Invite à configurer solde et salaire tant que ce n'est pas fait (et pas ignoré). */
+  needSetup = computed(() => {
+    const u = this.auth.user();
+    let skipped = false;
+    try { skipped = !!localStorage.getItem('vie_setup_done'); } catch { /* ignore */ }
+    return !!u && !skipped && u.openingBalance == null && u.monthlyIncome == null;
+  });
   first = computed(() => (this.auth.user()?.name || '').split(' ')[0]);
   private month = today().substring(0, 7);
   balance = computed(() => this.data.list('BUDGET').filter((e) => (e.date || '').startsWith(this.month)).reduce((s, e) => s + (e.kind === 'INCOME' ? 1 : -1) * Number(e.amount || 0), 0));

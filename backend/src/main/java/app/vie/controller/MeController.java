@@ -48,6 +48,17 @@ public class MeController {
     }
 
     public record OpeningRequest(Double amount) {}
+    public record SetupRequest(Double openingBalance, Double monthlyIncome) {}
+
+    /** Configuration de départ (après l'inscription) : solde actuel et salaire mensuel net. */
+    @PutMapping("/setup")
+    public User setup(@RequestBody SetupRequest r, Authentication auth) {
+        User u = me(current, auth);
+        if ((r.openingBalance() != null && Math.abs(r.openingBalance()) > 1e9) || (r.monthlyIncome() != null && (r.monthlyIncome() < 0 || r.monthlyIncome() > 1e9))) throw Errors.bad("ERR_VALIDATION");
+        u.openingBalance = r.openingBalance() == null ? null : java.math.BigDecimal.valueOf(r.openingBalance()).setScale(2, java.math.RoundingMode.HALF_UP);
+        u.monthlyIncome = r.monthlyIncome() == null ? null : java.math.BigDecimal.valueOf(r.monthlyIncome()).setScale(2, java.math.RoundingMode.HALF_UP);
+        return users.save(u);
+    }
     public record Charge(String label, Double amount) {}
     public record PlanRequest(Double monthlyIncome, List<Charge> fixed) {}
 

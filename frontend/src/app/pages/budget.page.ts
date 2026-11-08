@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
@@ -15,7 +16,7 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [FormsModule, TPipe, IconComponent],
+  imports: [FormsModule, RouterLink, TPipe, IconComponent],
   template: `
     <div class="page-head"><div><h1>{{ 'nav.budget' | t }}</h1><p>{{ monthLabel() }}</p></div>
       @if (!data.canEdit('BUDGET')) {<span class="pill">{{ 'c.viewonly' | t }}</span>}</div>
@@ -23,20 +24,16 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
     <div class="grid">
       <div class="card"><div class="stat"><div class="ico"><app-icon name="budget" /></div><div><div class="val amount in-c">{{ m(income()) }}</div><div class="lab">{{ 'budget.income' | t }}</div></div></div></div>
       <div class="card"><div class="stat"><div class="ico"><app-icon name="bills" /></div><div><div class="val amount out-c">{{ m(expense()) }}</div><div class="lab">{{ 'budget.expense' | t }}</div></div></div></div>
-      <div class="card hero-card"><div class="stat"><div><div class="val" style="color:#fff">{{ m(income() - expense()) }}</div><div class="lab" style="color:var(--sage)">{{ 'budget.balance' | t }}</div></div></div></div>
+      <div class="card hero-card"><div class="stat"><div><div class="val" style="color:#fff">{{ m(income() - expense()) }}</div><div class="lab" style="color:var(--sage)">{{ 'budget.monthBalance' | t }}</div></div></div></div>
     </div>
 
     @if (data.ownerId() === null) {
       <div class="card" style="margin-top:1rem">
-        <h2>{{ 'bp.title' | t }}</h2>
-        <form class="row" (ngSubmit)="saveOpening()">
-          <label class="f grow">{{ 'bp.balance' | t }}
-            <input name="opening" type="number" step="0.01" inputmode="decimal" [(ngModel)]="opening" placeholder="0.00"></label>
-          <button class="btn" type="submit">{{ 'c.save' | t }}</button>
-        </form>
+        <div class="row spread"><h2>{{ 'bp.title' | t }}</h2><a class="btn ghost small" routerLink="/profil">{{ 'bp.edit' | t }}</a></div>
         <ul class="list" style="margin-top:.8rem">
-          <li class="item"><div class="grow">{{ 'bp.balance' | t }}</div><div class="amount">{{ m(balance()) }}</div></li>
-          <li class="item"><div class="grow">{{ 'bp.toPay' | t }} <span class="muted small">({{ unpaid().length }})</span></div><div class="amount out-c">−{{ m(unpaidTotal()) }}</div></li>
+          <li class="item"><div class="grow">{{ 'bp.balanceShort' | t }}</div><div class="amount">{{ m(balance()) }}</div></li>
+          @if (salary() > 0) {<li class="item"><div class="grow">{{ 'setup.salaryShort' | t }}</div><div class="amount in-c">+{{ m(salary()) }}</div></li>}
+          <li class="item"><div class="grow">{{ 'bp.toPay' | t }} <span class="muted small">({{ unpaid().length }})</span></div><div class="amount out-c">{{ neg(unpaidTotal()) }}</div></li>
           <li class="item"><div class="grow"><strong>{{ 'bp.left' | t }}</strong></div><div class="amount" [class.in-c]="left() >= 0" [class.out-c]="left() < 0"><strong>{{ m(left()) }}</strong></div></li>
           <li class="item"><div class="grow">{{ 'bp.perDay' | t: { n: daysLeft() } }}</div><div class="amount">{{ m(perDay()) }}</div></li>
           @if (next(); as nx) {
@@ -127,7 +124,6 @@ export class BudgetPage {
   private api = inject(Api);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
-  opening: number | null = this.auth.user()?.openingBalance ?? null;
   cats = CATS;
   tab = signal<'now' | 'analysis'>('now');
   kind = 'EXPENSE'; cat = 'FOOD'; title = ''; amount: number | null = null; date = today();
@@ -138,6 +134,8 @@ export class BudgetPage {
   income = computed(() => this.rows().filter((e) => e.kind === 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   expense = computed(() => this.rows().filter((e) => e.kind !== 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   /** Mon solde : saisi par l'utilisateur. Tout le reste se calcule à partir des factures non payées (menu Factures). */
+  salary = computed(() => Number(this.auth.user()?.monthlyIncome ?? 0));
+  neg(v: number) { return v > 0 ? '−' + this.m(v) : this.m(0); }
   balance = computed(() => Number(this.auth.user()?.openingBalance ?? 0));
   /** Factures non payées échues ce mois-ci ou avant (en retard comprises). */
   unpaid = computed(() => {
@@ -181,12 +179,6 @@ export class BudgetPage {
 
   m(v: number | null | undefined) { return money(this.i18n, v); }
   d(v: string | null | undefined) { return fmtDate(this.i18n, v); }
-
-  saveOpening() {
-    this.api.put<User>('/me/opening', { amount: this.opening === null || (this.opening as unknown) === '' ? null : Number(this.opening) }).subscribe({
-      next: (u) => { this.auth.setUser(u); this.toast.show(this.i18n.t('fam.saved')); },
-    });
-  }
 
   add() {
     const payload: Partial<Entry> & { module: 'BUDGET'; title: string } = {
