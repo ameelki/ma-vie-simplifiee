@@ -23,6 +23,8 @@ public final class Dto {
 
     public record ProfileRequest(@NotBlank @Size(max = 100) String name, String phone, String lang) {}
 
+    public record PasswordRequest(@NotBlank String current, @NotBlank @Size(min = 8, max = 100) String password) {}
+
     public record EntryRequest(@NotBlank String module, @NotBlank @Size(max = 200) String title, @Size(max = 1000) String note,
                                BigDecimal amount, String kind, String category, LocalDate date, String time,
                                String status, Boolean done, Long ownerId) {}

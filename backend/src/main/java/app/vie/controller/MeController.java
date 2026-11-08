@@ -7,6 +7,7 @@ import app.vie.service.AccessService;
 import app.vie.service.Errors;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +18,10 @@ public class MeController {
     private final CurrentUser current;
     private final UserRepository users;
     private final AccessService access;
+    private final PasswordEncoder encoder;
 
-    public MeController(CurrentUser current, UserRepository users, AccessService access) {
+    public MeController(CurrentUser current, UserRepository users, AccessService access, PasswordEncoder encoder) {
+        this.encoder = encoder;
         this.current = current;
         this.users = users;
         this.access = access;
@@ -42,6 +45,15 @@ public class MeController {
         u.phone = r.phone();
         u.lang = AuthController.cleanLang(r.lang());
         return users.save(u);
+    }
+
+    /** Changer mon mot de passe (le mot de passe actuel est demandé). */
+    @PutMapping("/password")
+    public void password(@Valid @RequestBody Dto.PasswordRequest r, Authentication auth) {
+        User u = me(current, auth);
+        if (!encoder.matches(r.current(), u.passwordHash)) throw Errors.bad("ERR_BAD_CREDENTIALS");
+        u.passwordHash = encoder.encode(r.password());
+        users.save(u);
     }
 
     /** Les membres de ma famille dont je peux ouvrir au moins un menu. */

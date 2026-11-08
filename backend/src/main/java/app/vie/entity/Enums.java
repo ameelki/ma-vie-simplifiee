@@ -8,4 +8,6 @@ public final class Enums {
     /** VIEW = lecture seule, EDIT = lecture et modification. */
     public enum Level { VIEW, EDIT }
     public enum FamilyRole { ADMIN, MEMBER }
+    public enum Plan { FREE, MONTHLY, YEARLY }
+    public enum NotifKind { BILL, EVENT, TASK, DOCUMENT }
 }

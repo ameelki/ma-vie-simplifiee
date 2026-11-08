@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { loggedIn } from './core/guards';
 
 export const routes: Routes = [
+  { path: 'bienvenue', loadComponent: () => import('./pages/welcome.page').then((m) => m.WelcomePage) },
   { path: 'connexion', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'login' } },
   { path: 'inscription', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'register' } },
   {
@@ -19,6 +20,8 @@ export const routes: Routes = [
       { path: 'taches', loadComponent: () => import('./pages/tasks.page').then((m) => m.TasksPage) },
       { path: 'assistant', loadComponent: () => import('./pages/assistant.page').then((m) => m.AssistantPage) },
       { path: 'famille', loadComponent: () => import('./pages/family.page').then((m) => m.FamilyPage) },
+      { path: 'premium', loadComponent: () => import('./pages/premium.page').then((m) => m.PremiumPage) },
+      { path: 'notifications', loadComponent: () => import('./pages/notifications.page').then((m) => m.NotificationsPage) },
       { path: 'profil', loadComponent: () => import('./pages/profile.page').then((m) => m.ProfilePage) },
     ],
   },

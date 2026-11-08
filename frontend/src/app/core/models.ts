@@ -15,3 +15,6 @@ export interface MemberView { userId: number; name: string; email: string; role:
 export interface GrantView { ownerId: number; granteeId: number; module: Module; level: Level; }
 export interface FamilyView { id: number; name: string; inviteCode: string; myRole: 'ADMIN' | 'MEMBER'; members: MemberView[]; grants: GrantView[]; }
 export interface Viewable { ownerId: number; name: string; modules: Record<string, Level>; }
+
+export interface SubscriptionView { plan: 'FREE' | 'MONTHLY' | 'YEARLY'; trialEndsAt?: string | null; trialActive: boolean; trialUsed: boolean; trialDaysLeft: number; premium: boolean; }
+export interface Notif { id: number; kind: 'BILL' | 'EVENT' | 'TASK' | 'DOCUMENT'; title: string; dueDate?: string | null; amount?: number | null; readFlag: boolean; createdAt: string; }

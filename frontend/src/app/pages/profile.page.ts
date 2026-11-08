@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
@@ -12,7 +13,7 @@ import { IconComponent } from '../shared/icon.component';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [FormsModule, TPipe, IconComponent],
+  imports: [FormsModule, RouterLink, TPipe, IconComponent],
   template: `
     <div class="page-head"><div><h1>{{ 'pr.title' | t }}</h1></div></div>
     <div class="grid two">
@@ -25,6 +26,20 @@ import { IconComponent } from '../shared/icon.component';
             <select name="lang" [(ngModel)]="lang" (ngModelChange)="i18n.set($event)">@for (l of langs; track l.code) {<option [value]="l.code">{{ l.label }}</option>}</select></label>
           @if (error()) {<div class="err wide">{{ 'err.' + error() | t }}</div>}
           <button class="btn wide" type="submit" [disabled]="!name.trim()">{{ 'c.save' | t }}</button>
+        </div>
+      </form>
+      <div class="card stack">
+        <a class="btn ghost" routerLink="/premium">{{ 'pr.subscription' | t }}</a>
+        <a class="btn ghost" routerLink="/notifications">{{ 'pr.notifications' | t }}</a>
+      </div>
+      <form class="card" (ngSubmit)="changePw()">
+        <h2>{{ 'pr.security' | t }}</h2>
+        <div class="form">
+          <label class="f wide">{{ 'pr.pwCurrent' | t }}<input name="pc" type="password" [(ngModel)]="pwCurrent" autocomplete="current-password" required></label>
+          <label class="f wide">{{ 'pr.pwNew' | t }}<input name="pn" type="password" [(ngModel)]="pwNew" autocomplete="new-password" minlength="8" required>
+            <span class="muted small" style="font-weight:400">{{ 'auth.passwordHint' | t }}</span></label>
+          @if (pwError()) {<div class="err wide">{{ 'err.' + pwError() | t }}</div>}
+          <button class="btn wide" type="submit" [disabled]="!pwCurrent || pwNew.length < 8">{{ 'pr.pwChange' | t }}</button>
         </div>
       </form>
       <div class="card stack">
@@ -46,6 +61,8 @@ export class ProfilePage {
   phone = this.auth.user()?.phone || '';
   lang = this.i18n.lang() as string;
   error = signal('');
+  pwCurrent = ''; pwNew = '';
+  pwError = signal('');
   ini() { return initials(this.auth.user()?.name); }
 
   save() {
@@ -53,6 +70,14 @@ export class ProfilePage {
     this.api.put<User>('/me', { name: this.name.trim(), phone: this.phone.trim() || null, lang: this.lang }).subscribe({
       next: (u) => { this.auth.setUser(u); this.toast.show(this.i18n.t('pr.saved')); },
       error: (e) => this.error.set(errCode(e)),
+    });
+  }
+
+  changePw() {
+    this.pwError.set('');
+    this.api.put<void>('/me/password', { current: this.pwCurrent, password: this.pwNew }).subscribe({
+      next: () => { this.pwCurrent = ''; this.pwNew = ''; this.toast.show(this.i18n.t('pr.pwChanged')); },
+      error: (e) => this.pwError.set(errCode(e)),
     });
   }
 

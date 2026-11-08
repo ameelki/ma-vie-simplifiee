@@ -4,5 +4,5 @@ import { AuthService } from './auth.service';
 
 export const loggedIn: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.user() && auth.token ? true : inject(Router).createUrlTree(['/connexion']);
+  return auth.user() && auth.token ? true : inject(Router).createUrlTree(['/bienvenue']);
 };

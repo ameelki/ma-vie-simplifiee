@@ -11,6 +11,17 @@ Interface en **4 langues** : français, allemand, anglais, portugais.
 - Accès réel = menus proposés par le membre ∩ accès donnés par l'administrateur. Le contrôle est fait côté serveur.
 - Un sélecteur « Espace de… » permet de basculer sur l'espace d'un proche ; seuls les menus autorisés apparaissent.
 
+## Fonctionnalités ajoutées
+
+- **Écran de bienvenue** (« Commencer »), connexion / inscription avec choix de la langue
+- **Budget** : onglet Analyse (six derniers mois, dépense moyenne)
+- **Assistant** : priorités du jour + zone de discussion (réponses calculées à partir de vos données, 4 langues)
+- **Notifications** : rappels générés (factures proches, rendez-vous, tâches, documents qui expirent)
+- **Premium** : offres mensuelle / annuelle et essai gratuit de 7 jours (mode démonstration : aucun paiement n'est branché)
+- **Profil** : abonnement, notifications, changement de mot de passe
+
+Entités : `User`, `Family`, `FamilyMember`, `AccessGrant`, `Entry` (les six menus), `Subscription`, `Notification`.
+
 ## Stack
 
 - **Backend** : Java 21, Spring Boot 3.3, JPA/Hibernate, JWT, PostgreSQL (tables préfixées `vie_simplifiee_`)
