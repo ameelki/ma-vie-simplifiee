@@ -145,6 +145,7 @@ const R: Record<string, Row> = {
   'bp.edit': ['Modifier dans le profil', 'Edit in profile', 'Im Profil ändern', 'Editar no perfil'],
   'bp.balanceShort': ['Mon solde', 'My balance', 'Mein Kontostand', 'O meu saldo'],
   'budget.monthBalance': ['Solde du mois', 'Balance this month', 'Saldo im Monat', 'Saldo do mês'],
+  'budget.salaryIncl': ['dont salaire {n}', 'incl. salary {n}', 'davon Gehalt {n}', 'incl. salário {n}'],
   'budget.balance': ['Solde', 'Balance', 'Saldo', 'Saldo'],
   'budget.by': ['Dépenses par catégorie', 'Spending by category', 'Ausgaben nach Kategorie', 'Despesas por categoria'],
   'budget.add': ['Ajouter une opération', 'Add a transaction', 'Buchung hinzufügen', 'Adicionar movimento'],

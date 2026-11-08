@@ -1,12 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { Api } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
-import { ToastService } from '../core/toast.service';
 import { I18n, TPipe } from '../core/i18n.service';
-import { Entry, User } from '../core/models';
+import { Entry } from '../core/models';
 import { fmtDate, money, today } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
@@ -16,35 +13,16 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [FormsModule, RouterLink, TPipe, IconComponent],
+  imports: [FormsModule, TPipe, IconComponent],
   template: `
     <div class="page-head"><div><h1>{{ 'nav.budget' | t }}</h1><p>{{ monthLabel() }}</p></div>
       @if (!data.canEdit('BUDGET')) {<span class="pill">{{ 'c.viewonly' | t }}</span>}</div>
     @if (!data.can('BUDGET')) {<div class="card empty">{{ 'c.noAccess' | t }}</div>} @else {
     <div class="grid">
-      <div class="card"><div class="stat"><div class="ico"><app-icon name="budget" /></div><div><div class="val amount in-c">{{ m(income()) }}</div><div class="lab">{{ 'budget.income' | t }}</div></div></div></div>
+      <div class="card"><div class="stat"><div class="ico"><app-icon name="budget" /></div><div><div class="val amount in-c">{{ m(incomeTotal()) }}</div><div class="lab">{{ 'budget.income' | t }}@if (salary() > 0) { <span class="small">· {{ 'budget.salaryIncl' | t: { n: m(salary()) } }}</span>}</div></div></div></div>
       <div class="card"><div class="stat"><div class="ico"><app-icon name="bills" /></div><div><div class="val amount out-c">{{ m(expense()) }}</div><div class="lab">{{ 'budget.expense' | t }}</div></div></div></div>
-      <div class="card hero-card"><div class="stat"><div><div class="val" style="color:#fff">{{ m(income() - expense()) }}</div><div class="lab" style="color:var(--sage)">{{ 'budget.monthBalance' | t }}</div></div></div></div>
+      <div class="card hero-card"><div class="stat"><div><div class="val" style="color:#fff">{{ m(incomeTotal() - expense()) }}</div><div class="lab" style="color:var(--sage)">{{ 'budget.monthBalance' | t }}</div></div></div></div>
     </div>
-
-    @if (data.ownerId() === null) {
-      <div class="card" style="margin-top:1rem">
-        <div class="row spread"><h2>{{ 'bp.title' | t }}</h2><a class="btn ghost small" routerLink="/profil">{{ 'bp.edit' | t }}</a></div>
-        <ul class="list" style="margin-top:.8rem">
-          <li class="item"><div class="grow">{{ 'bp.balanceShort' | t }}</div><div class="amount">{{ m(balance()) }}</div></li>
-          @if (salary() > 0) {<li class="item"><div class="grow">{{ 'setup.salaryShort' | t }}</div><div class="amount in-c">+{{ m(salary()) }}</div></li>}
-          <li class="item"><div class="grow">{{ 'bp.toPay' | t }} <span class="muted small">({{ unpaid().length }})</span></div><div class="amount out-c">{{ neg(unpaidTotal()) }}</div></li>
-          <li class="item"><div class="grow"><strong>{{ 'bp.left' | t }}</strong></div><div class="amount" [class.in-c]="left() >= 0" [class.out-c]="left() < 0"><strong>{{ m(left()) }}</strong></div></li>
-          <li class="item"><div class="grow">{{ 'bp.perDay' | t: { n: daysLeft() } }}</div><div class="amount">{{ m(perDay()) }}</div></li>
-          @if (next(); as nx) {
-            <li class="item"><div class="grow">{{ 'bp.next' | t }}<div class="s">{{ nx.title }} · {{ d(nx.date) }}</div></div><div class="amount out-c">{{ m(nx.amount) }}</div></li>
-          }
-        </ul>
-        <div style="height:10px;border-radius:99px;background:var(--sand);overflow:hidden;margin-top:.6rem" role="img" [attr.aria-label]="'bp.toPay' | t">
-          <div [style.width.%]="usedPct()" [style.background]="usedPct() > 90 ? 'var(--danger)' : 'var(--green)'" style="height:100%"></div></div>
-        <p class="muted small" style="margin-top:.6rem">{{ 'bp.note' | t }}</p>
-      </div>
-    }
 
     <div class="tabs" style="margin-top:1rem">
       <button class="tab" type="button" [class.on]="tab() === 'now'" (click)="tab.set('now')">{{ 'budget.tabNow' | t }}</button>
@@ -121,9 +99,7 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
 export class BudgetPage {
   data = inject(DataService);
   private i18n = inject(I18n);
-  private api = inject(Api);
   private auth = inject(AuthService);
-  private toast = inject(ToastService);
   cats = CATS;
   tab = signal<'now' | 'analysis'>('now');
   kind = 'EXPENSE'; cat = 'FOOD'; title = ''; amount: number | null = null; date = today();
@@ -133,21 +109,10 @@ export class BudgetPage {
   rows = computed(() => this.all().filter((e) => (e.date || '').startsWith(this.month)).sort((a, b) => (b.date || '').localeCompare(a.date || '')));
   income = computed(() => this.rows().filter((e) => e.kind === 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   expense = computed(() => this.rows().filter((e) => e.kind !== 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
-  /** Mon solde : saisi par l'utilisateur. Tout le reste se calcule à partir des factures non payées (menu Factures). */
-  salary = computed(() => Number(this.auth.user()?.monthlyIncome ?? 0));
-  neg(v: number) { return v > 0 ? '−' + this.m(v) : this.m(0); }
-  balance = computed(() => Number(this.auth.user()?.openingBalance ?? 0));
-  /** Factures non payées échues ce mois-ci ou avant (en retard comprises). */
-  unpaid = computed(() => {
-    const end = this.month + '-31';
-    return this.data.list('BILLS').filter((e) => e.status !== 'PAID' && (e.date || '') <= end).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  });
-  unpaidTotal = computed(() => this.unpaid().reduce((s, e) => s + Number(e.amount || 0), 0));
-  next = computed(() => this.unpaid()[0] ?? null);
-  left = computed(() => this.balance() - this.unpaidTotal());
-  daysLeft = computed(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate() + 1; });
-  perDay = computed(() => Math.max(0, this.left()) / this.daysLeft());
-  usedPct = computed(() => { const b = this.balance(); return b > 0 ? Math.min(100, Math.round((this.unpaidTotal() / b) * 100)) : (this.unpaidTotal() > 0 ? 100 : 0); });
+  /** Salaire mensuel net configuré dans le profil (mon propre budget seulement). */
+  salary = computed(() => (this.data.ownerId() === null ? Number(this.auth.user()?.monthlyIncome ?? 0) : 0));
+  /** Revenus du mois = salaire configuré + revenus saisis ce mois-ci. */
+  incomeTotal = computed(() => this.salary() + this.income());
   slices = computed(() => {
     const sums: Record<string, number> = {};
     for (const e of this.rows().filter((x) => x.kind !== 'INCOME')) { const c = e.category || 'OTHER'; sums[c] = (sums[c] || 0) + Number(e.amount || 0); }
