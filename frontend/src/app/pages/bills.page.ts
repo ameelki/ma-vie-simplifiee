@@ -52,9 +52,9 @@ function readSize(): number {
       }
     </div>
     <div class="row spread" style="margin-bottom:.8rem">
-      <label class="check row" style="gap:.4rem"><input class="check" type="checkbox" [checked]="grouped()" (change)="grouped.set(!grouped())"> {{ 'bills.group' | t }}</label>
-      <label class="row small muted" style="gap:.4rem">{{ 'bills.perPage' | t }}
-        <select class="in" style="width:auto;min-height:36px" [value]="size()" (change)="setSize($any($event.target).value)">
+      <label class="row" style="gap:.5rem;flex-wrap:nowrap;cursor:pointer;font-weight:600;color:var(--forest)"><input class="check" type="checkbox" [checked]="grouped()" (change)="grouped.set(!grouped())"><span>{{ 'bills.group' | t }}</span></label>
+      <label class="row small muted" style="gap:.5rem;flex-wrap:nowrap;white-space:nowrap">{{ 'bills.perPage' | t }}
+        <select class="in" style="width:auto;min-width:72px;min-height:40px" [value]="size()" (change)="setSize($any($event.target).value)">
           @for (n of sizes; track n) {<option [value]="n" [selected]="n === size()">{{ n }}</option>}
         </select></label>
     </div>
