@@ -5,6 +5,8 @@ const R: Record<string, Row> = {
   'app.tagline': ['Votre quotidien, en toute simplicité.', 'Your daily life, made simple.', 'Ihr Alltag, ganz einfach.', 'O seu dia a dia, de forma simples.'],
   'app.hero': ['Budget, factures, agenda, documents, courses et tâches : tout au même endroit, et partagé avec votre famille comme vous le décidez.', 'Budget, bills, calendar, documents, shopping and tasks: all in one place, shared with your family the way you decide.', 'Budget, Rechnungen, Kalender, Dokumente, Einkäufe und Aufgaben: alles an einem Ort und mit Ihrer Familie geteilt, so wie Sie es entscheiden.', 'Orçamento, faturas, agenda, documentos, compras e tarefas: tudo num só lugar, partilhado com a sua família como decidir.'],
 
+  'nav.more': ['Plus', 'More', 'Mehr', 'Mais'],
+  'nav.premium': ['Premium', 'Premium', 'Premium', 'Premium'],
   'nav.home': ['Accueil', 'Home', 'Start', 'Início'],
   'nav.budget': ['Budget', 'Budget', 'Budget', 'Orçamento'],
   'nav.bills': ['Factures', 'Bills', 'Rechnungen', 'Faturas'],

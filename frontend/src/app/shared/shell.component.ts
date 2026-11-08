@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
@@ -21,6 +21,12 @@ const NAV: NavItem[] = [
   { path: 'assistant', key: 'nav.assistant', icon: 'assistant', personal: true },
   { path: 'famille', key: 'nav.family', icon: 'family' },
   { path: 'profil', key: 'nav.profile', icon: 'profile' },
+];
+
+const MAIN = ['accueil', 'budget', 'factures', 'courses'];
+const EXTRA: NavItem[] = [
+  { path: 'notifications', key: 'notif.title', icon: 'bell' },
+  { path: 'premium', key: 'nav.premium', icon: 'star' },
 ];
 
 @Component({
@@ -79,10 +85,26 @@ const NAV: NavItem[] = [
     </div>
 
     <nav class="tabbar" aria-label="menu">
-      @for (n of items(); track n.path) {
-        <a [routerLink]="'/' + n.path" routerLinkActive="active"><app-icon [name]="n.icon" [size]="22" /><span>{{ n.key | t }}</span></a>
+      @for (n of mainTabs(); track n.path) {
+        <a [routerLink]="'/' + n.path" routerLinkActive="active" (click)="more.set(false)"><app-icon [name]="n.icon" [size]="22" /><span>{{ n.key | t }}</span></a>
       }
+      <button type="button" class="more-btn" [class.active]="more()" (click)="more.set(!more())" [attr.aria-expanded]="more()"><app-icon name="more" [size]="22" /><span>{{ 'nav.more' | t }}</span></button>
     </nav>
+
+    @if (more()) {
+      <div class="sheet-backdrop" (click)="more.set(false)"></div>
+      <div class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="'nav.more' | t">
+        <div class="sheet-grid">
+          @for (n of moreItems(); track n.path) {
+            <a [routerLink]="'/' + n.path" routerLinkActive="active" (click)="more.set(false)"><app-icon [name]="n.icon" [size]="26" /><span>{{ n.key | t }}</span></a>
+          }
+        </div>
+        <div class="lang-switch" style="margin:.9rem 0 .6rem">
+          @for (l of langs; track l.code) {<button type="button" [class.on]="i18n.lang() === l.code" (click)="i18n.set(l.code)">{{ l.code }}</button>}
+        </div>
+        <button class="btn ghost" style="width:100%" type="button" (click)="more.set(false); auth.logout()"><app-icon name="logout" [size]="18" />{{ 'auth.logout' | t }}</button>
+      </div>
+    }
   `,
 })
 export class ShellComponent implements OnInit {
@@ -92,6 +114,10 @@ export class ShellComponent implements OnInit {
   private router = inject(Router);
   private api = inject(Api);
   langs = LANGS;
+  more = signal(false);
+  /** Barre du bas : 4 onglets principaux, le reste dans « Plus » (évite une barre de 10 onglets à faire défiler). */
+  mainTabs = computed(() => this.items().filter((n) => MAIN.includes(n.path)));
+  moreItems = computed(() => [...this.items().filter((n) => !MAIN.includes(n.path)), ...EXTRA]);
 
   items = computed(() => {
     const viewing = this.data.ownerId() !== null;

@@ -16,6 +16,9 @@ const PATHS: Record<string, string> = {
   chevL: 'M15 5l-7 7 7 7',
   chevR: 'M9 5l7 7-7 7',
   lock: 'M6 11h12v9H6zM8 11V8a4 4 0 018 0v3',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  bell: 'M6 9a6 6 0 0112 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 004 0',
+  star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
   logout: 'M10 4H4v16h6M14 8l5 4-5 4M19 12H9',
 };
 
