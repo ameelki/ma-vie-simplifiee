@@ -48,6 +48,28 @@ public class MeController {
     }
 
     public record OpeningRequest(Double amount) {}
+    public record Charge(String label, Double amount) {}
+    public record PlanRequest(Double monthlyIncome, List<Charge> fixed) {}
+
+    /** Mon budget mensuel : revenu net et charges fixes, base du « reste à vivre » calculé dans Budget. */
+    @PutMapping("/plan")
+    public User plan(@RequestBody PlanRequest r, Authentication auth) throws com.fasterxml.jackson.core.JsonProcessingException {
+        User u = me(current, auth);
+        if (r.monthlyIncome() == null) u.monthlyIncome = null;
+        else if (r.monthlyIncome() < 0 || r.monthlyIncome() > 1e9) throw Errors.bad("ERR_VALIDATION");
+        else u.monthlyIncome = java.math.BigDecimal.valueOf(r.monthlyIncome()).setScale(2, java.math.RoundingMode.HALF_UP);
+        List<Charge> clean = new java.util.ArrayList<>();
+        if (r.fixed() != null) {
+            if (r.fixed().size() > 30) throw Errors.bad("ERR_VALIDATION");
+            for (Charge c : r.fixed()) {
+                if (c.label() == null || c.label().isBlank() || c.amount() == null || c.amount() < 0 || c.amount() > 1e9) continue;
+                String l = c.label().trim();
+                clean.add(new Charge(l.length() > 60 ? l.substring(0, 60) : l, Math.round(c.amount() * 100) / 100.0));
+            }
+        }
+        u.fixedCharges = clean.isEmpty() ? null : new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(clean);
+        return users.save(u);
+    }
 
     /** Solde de départ de mon compte (Budget). Vide = aucun. */
     @PutMapping("/opening")

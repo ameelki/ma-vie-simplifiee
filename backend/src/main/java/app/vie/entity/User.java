@@ -25,4 +25,10 @@ public class User extends BaseEntity {
     /** Solde de départ du compte, saisi par l'utilisateur dans Budget. */
     @Column(precision = 12, scale = 2)
     public BigDecimal openingBalance;
+    /** Revenu mensuel net saisi dans Budget. */
+    @Column(precision = 12, scale = 2)
+    public BigDecimal monthlyIncome;
+    /** Charges fixes mensuelles (loyer, assurances…) : tableau JSON [{label, amount}]. */
+    @Column(length = 4000)
+    public String fixedCharges;
 }

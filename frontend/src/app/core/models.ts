@@ -2,7 +2,7 @@ export type Module = 'BUDGET' | 'BILLS' | 'AGENDA' | 'DOCUMENTS' | 'SHOPPING' | 
 export type Level = 'VIEW' | 'EDIT';
 export const MODULES: Module[] = ['BUDGET', 'BILLS', 'AGENDA', 'DOCUMENTS', 'SHOPPING', 'TASKS'];
 
-export interface User { id: number; name: string; email: string; phone?: string; lang: string; openingBalance?: number | null; lastSeenAt?: string | null; }
+export interface User { id: number; name: string; email: string; phone?: string; lang: string; openingBalance?: number | null; monthlyIncome?: number | null; fixedCharges?: string | null; lastSeenAt?: string | null; }
 export interface AuthResponse { token: string; user: User; }
 
 export interface Entry {
