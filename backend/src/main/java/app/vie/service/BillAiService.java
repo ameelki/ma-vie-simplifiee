@@ -41,6 +41,7 @@ public class BillAiService {
             + "\"amount\" (montant total TTC à payer, nombre avec point décimal, sans symbole), "
             + "\"dueDate\" (date limite de paiement au format AAAA-MM-JJ, ou la date de la facture si aucune échéance n'est indiquée, ou null), "
             + "\"note\" (numéro de facture ou référence de paiement, ou null). "
+            + "\"category\" (une seule valeur parmi HOUSING, ENERGY, WATER, INTERNET, PHONE, INSURANCE, HEALTH, TAXES, OTHER ; HOUSING = loyer ou charges de logement, ENERGY = électricité ou gaz, TAXES = impôts ou taxes). "
             + "Si une information est introuvable, mets null. N'invente rien.";
 
     private final String url;
@@ -119,6 +120,8 @@ public class BillAiService {
             out.put("amount", number(j.path("amount")));
             out.put("dueDate", date(j.path("dueDate")));
             out.put("note", clean(j.path("note"), 1000));
+            String cat = clean(j.path("category"), 20);
+            out.put("category", cat != null && java.util.Set.of("HOUSING", "ENERGY", "WATER", "INTERNET", "PHONE", "INSURANCE", "HEALTH", "TAXES", "OTHER").contains(cat.toUpperCase()) ? cat.toUpperCase() : null);
             return out;
         } catch (ResponseStatusException e) {
             throw e;

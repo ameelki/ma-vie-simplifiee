@@ -269,6 +269,22 @@ const R: Record<string, Row> = {
   'err.ERR_AI_FAILED': ['Impossible de lire ce document. Remplissez le formulaire à la main.', 'Could not read this document. Fill in the form by hand.', 'Dieses Dokument konnte nicht gelesen werden. Füllen Sie das Formular manuell aus.', 'Não foi possível ler este documento. Preencha o formulário à mão.'],
   'err.ERR_FILE_TYPE': ['Format non pris en charge (PDF, JPG ou PNG).', 'Unsupported format (PDF, JPG or PNG).', 'Format nicht unterstützt (PDF, JPG oder PNG).', 'Formato não suportado (PDF, JPG ou PNG).'],
   'err.ERR_FILE_TOO_BIG': ['Fichier trop volumineux (8 Mo maximum).', 'File too large (8 MB maximum).', 'Datei zu groß (maximal 8 MB).', 'Ficheiro demasiado grande (máximo 8 MB).'],
+
+  'bcat.HOUSING': ['Logement', 'Housing', 'Wohnen', 'Habitação'],
+  'bcat.ENERGY': ['Énergie', 'Energy', 'Energie', 'Energia'],
+  'bcat.WATER': ['Eau', 'Water', 'Wasser', 'Água'],
+  'bcat.INTERNET': ['Internet', 'Internet', 'Internet', 'Internet'],
+  'bcat.PHONE': ['Téléphone', 'Phone', 'Telefon', 'Telefone'],
+  'bcat.INSURANCE': ['Assurances', 'Insurance', 'Versicherungen', 'Seguros'],
+  'bcat.HEALTH': ['Santé', 'Health', 'Gesundheit', 'Saúde'],
+  'bcat.TAXES': ['Impôts et taxes', 'Taxes and fees', 'Steuern und Gebühren', 'Impostos e taxas'],
+  'bcat.OTHER': ['Autres', 'Other', 'Sonstiges', 'Outros'],
+  'bills.group': ['Classer par catégorie', 'Group by category', 'Nach Kategorie gruppieren', 'Agrupar por categoria'],
+  'bills.perPage': ['Par page', 'Per page', 'Pro Seite', 'Por página'],
+  'page.of': ['Page {p} / {n}', 'Page {p} of {n}', 'Seite {p} von {n}', 'Página {p} de {n}'],
+  'page.prev': ['Précédent', 'Previous', 'Zurück', 'Anterior'],
+  'page.next': ['Suivant', 'Next', 'Weiter', 'Seguinte'],
+  'bills.count': ['{n} facture(s)', '{n} bill(s)', '{n} Rechnung(en)', '{n} fatura(s)'],
 };
 
 export const DICT: Record<string, { fr: string; en: string; de: string; pt: string }> = {};
