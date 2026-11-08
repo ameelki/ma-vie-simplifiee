@@ -1,7 +1,7 @@
 {
   "name": "ma-vie-simplifiee",
   "version": "1.0.0",
-  "scripts": { "ng": "ng", "start": "ng serve --port 4200", "build": "ng build" },
+  "scripts": { "ng": "ng", "start": "ng serve --port 4200", "build": "ng build", "build:prerender": "ng build --configuration=prerender" },
   "private": true,
   "dependencies": {
     "@angular/animations": "^18.2.0",
@@ -11,6 +11,7 @@
     "@angular/forms": "^18.2.0",
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
+    "@angular/platform-server": "^18.2.0",
     "@angular/router": "^18.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.6.0",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.0",
     "@angular/cli": "^18.2.0",
+    "@types/node": "^20.14.0",
     "@angular/compiler-cli": "^18.2.0",
     "typescript": "~5.5.4"
   }

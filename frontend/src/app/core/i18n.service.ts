@@ -9,6 +9,7 @@ const KEY = 'vie_lang';
 const LOCALE: Record<Lang, string> = { fr: 'fr-FR', en: 'en-GB', de: 'de-DE', pt: 'pt-PT' };
 
 function initial(): Lang {
+  if (typeof window === 'undefined') return 'fr'; // pré-rendu côté serveur : français par défaut
   try {
     const s = localStorage.getItem(KEY);
     if (s === 'fr' || s === 'en' || s === 'de' || s === 'pt') return s;
