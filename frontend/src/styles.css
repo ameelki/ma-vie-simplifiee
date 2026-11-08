@@ -220,3 +220,10 @@ label.f { display: grid; gap: .3rem; font-size: .8rem; font-weight: 600; color: 
   .tabbar a, .tabbar .more-btn { min-height: 44px; flex-direction: row; }
   .topbar { position: static; }
 }
+
+/* Page d'accueil publique : contenu lisible par les moteurs de recherche */
+.landing { max-width: 1000px; margin: 0 auto; padding: 2.5rem max(1rem, env(safe-area-inset-left)) 3rem; }
+.landing h2 { margin-bottom: 1rem; }
+.faq { margin-top: .6rem; }
+.faq summary { cursor: pointer; font-weight: 600; color: var(--forest); min-height: 28px; }
+.faq p { margin: .6rem 0 0; }

@@ -2,9 +2,9 @@ import { Routes } from '@angular/router';
 import { loggedIn } from './core/guards';
 
 export const routes: Routes = [
-  { path: 'bienvenue', loadComponent: () => import('./pages/welcome.page').then((m) => m.WelcomePage) },
-  { path: 'connexion', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'login' } },
-  { path: 'inscription', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'register' } },
+  { path: 'bienvenue', title: 'Ma Vie Simplifiée (Easy Life) : budget, factures, agenda et courses en famille', loadComponent: () => import('./pages/welcome.page').then((m) => m.WelcomePage) },
+  { path: 'connexion', title: 'Connexion · Ma Vie Simplifiée', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'login' } },
+  { path: 'inscription', title: 'Créer mon compte gratuit · Ma Vie Simplifiée', loadComponent: () => import('./pages/auth.page').then((m) => m.AuthPage), data: { mode: 'register' } },
   { path: 'configuration', canActivate: [loggedIn], loadComponent: () => import('./pages/setup.page').then((m) => m.SetupPage) },
   {
     path: '',

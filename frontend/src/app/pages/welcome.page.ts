@@ -26,11 +26,27 @@ import { LogoComponent } from '../shared/logo.component';
           <p class="muted small">{{ 'auth.hasaccount' | t }} <a routerLink="/connexion">{{ 'auth.login' | t }}</a></p>
         </div>
       </section>
-    </div>`,
+    </div>
+
+    <main class="landing">
+      <h2>{{ 'wel.featTitle' | t }}</h2>
+      <div class="grid">
+        @for (f of feats; track f) {
+          <article class="card"><h3>{{ 'wel.f.' + f + '.t' | t }}</h3><p class="muted">{{ 'wel.f.' + f + '.d' | t }}</p></article>
+        }
+      </div>
+      <h2 style="margin-top:2rem">{{ 'wel.faqTitle' | t }}</h2>
+      @for (q of faqs; track q) {
+        <details class="card faq"><summary>{{ 'wel.q.' + q + '.q' | t }}</summary><p class="muted">{{ 'wel.q.' + q + '.a' | t }}</p></details>
+      }
+      <p class="muted small" style="text-align:center;margin-top:2rem">{{ 'app.name' | t }} · Easy Life · easylives.digital</p>
+    </main>`,
 })
 export class WelcomePage {
   i18n = inject(I18n);
   langs = LANGS;
+  feats = ['budget', 'bills', 'agenda', 'docs', 'shop', 'family'];
+  faqs = ['what', 'free', 'privacy', 'langs'];
   constructor() {
     if (inject(AuthService).token) inject(Router).navigate(['/accueil']);
   }
