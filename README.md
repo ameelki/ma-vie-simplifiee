@@ -22,6 +22,19 @@ Interface en **4 langues** : français, allemand, anglais, portugais.
 
 Entités : `User`, `Family`, `FamilyMember`, `AccessGrant`, `Entry` (les six menus), `Subscription`, `Notification`.
 
+## Import de factures par IA (Ollama, gratuit)
+
+Sur la page **Factures**, « Importer une facture » lit un PDF ou une photo et remplit le formulaire (fournisseur, montant, échéance, référence). Vous vérifiez, puis ajoutez.
+Le modèle tourne chez vous avec [Ollama](https://ollama.com) : aucun envoi vers un service payant.
+
+```bash
+# installer Ollama (https://ollama.com/download), puis :
+ollama pull gemma3:4b          # modèle léger avec lecture d'images ; plus précis : qwen2.5vl:7b
+ollama serve                   # si le service n'est pas déjà lancé (port 11434)
+# backend : OLLAMA_URL (défaut http://localhost:11434) et OLLAMA_MODEL (défaut gemma3:4b)
+```
+PDF : le texte est lu directement ; un scan est converti en image. Le plan gratuit de Render ne peut pas héberger Ollama : en ligne, pointez `OLLAMA_URL` vers une machine à vous (PC, serveur) ; sans serveur Ollama, la fonction affiche un message et le formulaire se remplit à la main.
+
 ## Stack
 
 - **Backend** : Java 21, Spring Boot 3.3, JPA/Hibernate, JWT, PostgreSQL (tables préfixées `vie_simplifiee_`)
