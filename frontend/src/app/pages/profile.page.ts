@@ -45,6 +45,8 @@ import { IconComponent } from '../shared/icon.component';
       <div class="card stack">
         <h2>{{ 'pr.data' | t }}</h2>
         <button class="btn ghost" type="button" (click)="demo()">{{ 'pr.demo' | t }}</button>
+        <button class="btn ghost" type="button" (click)="testMail()">{{ 'pr.mail' | t }}</button>
+        <p class="muted small">{{ 'pr.mailHint' | t }}</p>
         <button class="btn danger" type="button" (click)="auth.logout()"><app-icon name="logout" [size]="18" />{{ 'auth.logout' | t }}</button>
       </div>
     </div>
@@ -78,6 +80,13 @@ export class ProfilePage {
     this.api.put<void>('/me/password', { current: this.pwCurrent, password: this.pwNew }).subscribe({
       next: () => { this.pwCurrent = ''; this.pwNew = ''; this.toast.show(this.i18n.t('pr.pwChanged')); },
       error: (e) => this.pwError.set(errCode(e)),
+    });
+  }
+
+  testMail() {
+    this.api.post<unknown>('/me/test-mail', {}).subscribe({
+      next: () => this.toast.show(this.i18n.t('pr.mailSent')),
+      error: () => this.toast.show(this.i18n.t('pr.mailErr')),
     });
   }
 

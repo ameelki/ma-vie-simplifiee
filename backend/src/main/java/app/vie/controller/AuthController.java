@@ -6,6 +6,7 @@ import app.vie.entity.User;
 import app.vie.repository.UserRepository;
 import app.vie.security.JwtService;
 import app.vie.service.Errors;
+import app.vie.service.MailService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,8 +19,10 @@ public class AuthController {
     private final UserRepository users;
     private final PasswordEncoder encoder;
     private final JwtService jwt;
+    private final MailService mail;
 
-    public AuthController(UserRepository users, PasswordEncoder encoder, JwtService jwt) {
+    public AuthController(UserRepository users, PasswordEncoder encoder, JwtService jwt, MailService mail) {
+        this.mail = mail;
         this.users = users;
         this.encoder = encoder;
         this.jwt = jwt;
@@ -42,6 +45,7 @@ public class AuthController {
         u.passwordHash = encoder.encode(r.password());
         u.role = Enums.Role.USER;
         users.save(u);
+        mail.welcome(u);
         return new Dto.AuthResponse(jwt.generate(u.email), u);
     }
 
