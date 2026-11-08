@@ -13,7 +13,7 @@ import { fmtDate } from '../core/util';
     <div class="page-head"><div><h1>{{ 'adm.title' | t }}</h1></div>
       <button class="btn ghost" type="button" (click)="load()">{{ 'adm.refresh' | t }}</button></div>
     @if (error()) {<div class="card err">{{ 'err.ERR_FORBIDDEN' | t }}</div>}
-    @else if (data(); as o) {
+    @if (data(); as o) {
       <div class="grid">
         <div class="card stat"><div><div class="val">{{ o.total }}</div><div class="lab">{{ 'adm.total' | t }}</div></div></div>
         <div class="card stat"><div><div class="val" style="color:var(--green)">{{ o.online }}</div><div class="lab">{{ 'adm.online' | t }}</div></div></div>
