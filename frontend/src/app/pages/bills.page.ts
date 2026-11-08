@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../core/data.service';
 import { I18n, TPipe } from '../core/i18n.service';
@@ -17,6 +17,16 @@ function readSize(): number {
   standalone: true,
   imports: [FormsModule, TPipe, IconComponent],
   template: `
+    @if (analysing()) {
+      <div class="block-screen" role="alertdialog" aria-modal="true" aria-live="assertive" [attr.aria-label]="'bills.wait' | t">
+        <div class="block-box">
+          <div class="spinner" aria-hidden="true"></div>
+          <h2>{{ 'bills.wait' | t }}</h2>
+          <div class="block-count">{{ 'bills.elapsed' | t: { n: seconds() } }}</div>
+          <p class="muted small">{{ 'bills.waitHint' | t }}</p>
+        </div>
+      </div>
+    }
     <div class="page-head"><div><h1>{{ 'nav.bills' | t }}</h1><p>{{ 'bills.toPay' | t }} : <strong>{{ m(left()) }}</strong></p></div>
       @if (!data.canEdit('BILLS')) {<span class="pill">{{ 'c.viewonly' | t }}</span>}</div>
     @if (!data.can('BILLS')) {<div class="card empty">{{ 'c.noAccess' | t }}</div>} @else {
@@ -26,7 +36,6 @@ function readSize(): number {
       <div class="row" style="margin-bottom:.8rem">
         <input #file type="file" accept="application/pdf,image/*" hidden (change)="onFile($any($event.target))">
         <button class="btn ghost" type="button" [disabled]="analysing()" (click)="file.click()">{{ 'bills.import' | t }}</button>
-        @if (analysing()) {<span class="muted small" role="status">{{ 'bills.analysing' | t }}</span>}
       </div>
       @if (aiDone()) {<div class="banner" style="margin-bottom:.8rem" role="status">{{ 'bills.aiDone' | t }}</div>}
       @if (aiError()) {<div class="err" role="alert" style="margin-bottom:.8rem">{{ 'err.' + aiError() | t }}</div>}
@@ -91,13 +100,33 @@ function readSize(): number {
     }
   `,
 })
-export class BillsPage {
+export class BillsPage implements OnDestroy {
   data = inject(DataService);
   private i18n = inject(I18n);
   tab = signal<'PENDING' | 'PAID'>('PENDING');
   private api = inject(Api);
   title = ''; amount: number | null = null; date = today(); note = '';
   analysing = signal(false);
+  seconds = signal(0);
+  private timer: ReturnType<typeof setInterval> | null = null;
+
+  private startWait() {
+    this.seconds.set(0);
+    this.analysing.set(true);
+    this.stopTimer();
+    this.timer = setInterval(() => this.seconds.set(this.seconds() + 1), 1000);
+  }
+
+  private endWait() {
+    this.stopTimer();
+    this.analysing.set(false);
+  }
+
+  private stopTimer() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  }
+
+  ngOnDestroy() { this.stopTimer(); }
   aiDone = signal(false);
   aiError = signal('');
 
@@ -147,7 +176,7 @@ export class BillsPage {
     if (!f) return;
     this.aiError.set('');
     this.aiDone.set(false);
-    this.analysing.set(true);
+    this.startWait();
     try {
       const blob: Blob = f.type.startsWith('image/') ? await compressImage(f) : f;
       const name = f.type.startsWith('image/') ? 'facture.jpg' : f.name;
@@ -159,13 +188,13 @@ export class BillsPage {
           if (r.note) this.note = r.note;
           if (r.category && BILL_CATS.includes(r.category)) this.category = r.category;
           this.aiDone.set(true);
-          this.analysing.set(false);
+          this.endWait();
         },
-        error: (e) => { this.aiError.set(errCode(e)); this.analysing.set(false); },
+        error: (e) => { this.aiError.set(errCode(e)); this.endWait(); },
       });
     } catch {
       this.aiError.set('ERR_FILE_TYPE');
-      this.analysing.set(false);
+      this.endWait();
     }
   }
 

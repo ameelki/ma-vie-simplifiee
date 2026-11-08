@@ -285,6 +285,10 @@ const R: Record<string, Row> = {
   'page.prev': ['Précédent', 'Previous', 'Zurück', 'Anterior'],
   'page.next': ['Suivant', 'Next', 'Weiter', 'Seguinte'],
   'bills.count': ['{n} facture(s)', '{n} bill(s)', '{n} Rechnung(en)', '{n} fatura(s)'],
+
+  'bills.wait': ['Analyse de la facture en cours…', 'Reading your bill…', 'Rechnung wird gelesen…', 'A ler a fatura…'],
+  'bills.waitHint': ['Ne fermez pas la page : le formulaire se remplira tout seul.', 'Please keep this page open: the form will fill itself in.', 'Bitte lassen Sie die Seite geöffnet: Das Formular füllt sich von selbst.', 'Não feche a página: o formulário será preenchido automaticamente.'],
+  'bills.elapsed': ['Temps écoulé : {n} s', 'Elapsed: {n} s', 'Verstrichene Zeit: {n} s', 'Tempo decorrido: {n} s'],
 };
 
 export const DICT: Record<string, { fr: string; en: string; de: string; pt: string }> = {};

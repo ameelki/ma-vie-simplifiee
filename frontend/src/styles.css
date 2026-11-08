@@ -165,3 +165,12 @@ label.f { display: grid; gap: .3rem; font-size: .8rem; font-weight: 600; color: 
 .toast { position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%); background: var(--forest); color: #fff; padding: .7rem 1.2rem; border-radius: 999px; font-weight: 600; z-index: 100; box-shadow: var(--shadow); max-width: 90vw; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Écran bloqué pendant l'analyse d'une facture */
+.block-screen { position: fixed; inset: 0; z-index: 300; background: rgba(23, 63, 56, .82); display: grid; place-items: center; padding: 1rem; backdrop-filter: blur(3px); }
+.block-box { background: #fff; border-radius: 20px; padding: 2rem 2.2rem; text-align: center; max-width: 380px; width: 100%; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .5); }
+.block-box h2 { margin-bottom: .4rem; }
+.block-count { font-family: var(--serif); font-size: 2rem; color: var(--green); margin: .3rem 0 .6rem; font-variant-numeric: tabular-nums; }
+.spinner { width: 56px; height: 56px; margin: 0 auto 1rem; border-radius: 50%; border: 5px solid var(--sand); border-top-color: var(--green); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.5s !important; } }
