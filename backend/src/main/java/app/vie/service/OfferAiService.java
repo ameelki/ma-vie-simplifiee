@@ -48,6 +48,10 @@ public class OfferAiService {
         this.mapper = mapper;
     }
 
+    public boolean enabled() {
+        return ai.enabled();
+    }
+
     public static String canonicalStore(String s) {
         if (s == null) return null;
         for (String k : STORES) if (k.equalsIgnoreCase(s.trim())) return k;
