@@ -59,6 +59,8 @@ En local, mettez `apiUrl: 'http://localhost:8080/api'` dans `frontend/src/assets
 
 ## Déploiement gratuit (Neon + Render + Netlify)
 
+> Ollama ne peut pas tourner sur Render gratuit : en ligne, le bouton d'import de factures par IA est masqué automatiquement (il apparaît seulement quand un serveur Ollama répond, par exemple en local). Tout le reste fonctionne sans IA.
+
 1. **Neon** : créez un projet PostgreSQL (la même base peut héberger plusieurs projets grâce au préfixe des tables).
 2. **Render** : New → Web Service (Docker), **Root Directory = `backend`**, ou Blueprint avec `render.yaml`. Variables :
    `DB_URL` = `jdbc:postgresql://HOTE/BASE?sslmode=require`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` (32 caractères min.), `CORS_ORIGINS` (facultatif pour `*.netlify.app`).

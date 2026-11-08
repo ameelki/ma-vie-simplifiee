@@ -33,10 +33,12 @@ function readSize(): number {
     @if (data.canEdit('BILLS')) {
     <form class="card" (ngSubmit)="add()" style="margin-bottom:1rem">
       <h2>{{ 'bills.add' | t }}</h2>
+      @if (aiOn()) {
       <div class="row" style="margin-bottom:.8rem">
         <input #file type="file" accept="application/pdf,image/*" hidden (change)="onFile($any($event.target))">
         <button class="btn ghost" type="button" [disabled]="analysing()" (click)="file.click()">{{ 'bills.import' | t }}</button>
       </div>
+      }
       @if (aiDone()) {<div class="banner" style="margin-bottom:.8rem" role="status">{{ 'bills.aiDone' | t }}</div>}
       @if (aiError()) {<div class="err" role="alert" style="margin-bottom:.8rem">{{ 'err.' + aiError() | t }}</div>}
       <div class="form">
@@ -129,6 +131,9 @@ export class BillsPage implements OnDestroy {
   ngOnDestroy() { this.stopTimer(); }
   aiDone = signal(false);
   aiError = signal('');
+  /** Le bouton d'import par IA n'apparaît que si un serveur Ollama répond (donc jamais sur Render gratuit). */
+  aiOn = signal(false);
+  private aiCheck = this.api.get<{ enabled: boolean }>('/ai/status').subscribe({ next: (r) => this.aiOn.set(!!r.enabled), error: () => undefined });
 
   all = computed(() => this.data.list('BILLS'));
   cats = BILL_CATS;
