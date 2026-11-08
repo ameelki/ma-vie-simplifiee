@@ -7,13 +7,14 @@ import { OfferView } from '../core/models';
 import { I18n, TPipe } from '../core/i18n.service';
 import { fmtDate, matchOffers, money } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
+import { OfferPhotoComponent } from '../shared/offer-photo.component';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
 @Component({
   selector: 'app-shopping',
   standalone: true,
-  imports: [FormsModule, RouterLink, TPipe, IconComponent],
+  imports: [FormsModule, RouterLink, TPipe, IconComponent, OfferPhotoComponent],
   template: `
     <div class="page-head"><div><h1>{{ 'nav.shopping' | t }}</h1></div>
       <a class="btn ghost" routerLink="/prix">{{ 'px.open' | t }}</a>
@@ -26,6 +27,7 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
         <div class="promo-row">
           @for (p of promos(); track p.id) {
             <div class="promo-chip">
+              @if (p.hasPhoto) {<app-offer-photo [id]="p.id" [size]="96" />}
               <span class="promo-price">{{ fmt(p.price) }}</span>
               <span class="promo-name">{{ p.product }}</span>
               <span class="muted small">{{ p.store }}@if (p.validUntil) { · {{ 'px.until' | t }} {{ d(p.validUntil) }}}</span>

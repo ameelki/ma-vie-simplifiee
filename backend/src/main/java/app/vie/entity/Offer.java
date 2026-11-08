@@ -18,4 +18,5 @@ public class Offer extends BaseEntity {
     @Column(length = 40)
     public String unit;
     public LocalDate validUntil;
+    public Boolean hasPhoto = Boolean.FALSE;
 }

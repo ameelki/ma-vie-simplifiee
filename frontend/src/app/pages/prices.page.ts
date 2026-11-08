@@ -8,10 +8,11 @@ import { OfferView } from '../core/models';
 import { ToastService } from '../core/toast.service';
 import { compressImage, errCode, fmtDate, money } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
+import { OfferPhotoComponent } from '../shared/offer-photo.component';
 
-const STORES = ['Cactus', 'Delhaize', 'Auchan', 'Lidl', 'Aldi', 'Colruyt', 'Match', 'Leclerc'];
+const STORES = ['Cactus', 'Naturata', 'Delhaize', 'Lidl', 'Aldi'];
 
-interface Line { product: string; price: number; unit?: string | null; keep: boolean; }
+interface Line { product: string; price: number; unit?: string | null; photo?: string | null; keep: boolean; }
 interface Hit { store: string; offer: OfferView; }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -20,7 +21,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
 @Component({
   selector: 'app-prices',
   standalone: true,
-  imports: [FormsModule, RouterLink, TPipe, IconComponent],
+  imports: [FormsModule, RouterLink, TPipe, IconComponent, OfferPhotoComponent],
   template: `
     @if (busy()) {
       <div class="block-screen" role="alertdialog" aria-modal="true" aria-live="assertive">
@@ -70,10 +71,10 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
     <div class="card stack" style="margin-top:1rem">
       <h2>{{ 'px.import' | t }}</h2>
       <p class="muted small">{{ 'px.importHint' | t }}</p>
+      <p class="muted small">{{ 'px.lu' | t }}</p>
       <div class="row">
         <label class="grow">{{ 'px.store' | t }}
-          <input class="in" list="stores" name="store" [(ngModel)]="store" placeholder="Cactus, Lidl…"></label>
-        <datalist id="stores">@for (s of storeList; track s) {<option [value]="s"></option>}</datalist>
+          <select class="in" name="store" [(ngModel)]="store"><option value="">—</option>@for (s of storeList; track s) {<option [value]="s">{{ s }}</option>}</select></label>
       </div>
       <div class="row">
         <label class="btn ghost" style="cursor:pointer">
@@ -85,7 +86,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
       <label>{{ 'px.paste' | t }}
         <textarea class="in" rows="4" name="pasted" [(ngModel)]="pasted" placeholder="Lait demi-écrémé 1 L - 0,99 €"></textarea></label>
       @if (error()) {<div class="err">{{ 'err.' + error() | t }}</div>}
-      <button class="btn" type="button" [disabled]="!store.trim() || (!file && !pasted.trim())" (click)="read()">{{ 'px.read' | t }}</button>
+      <button class="btn" type="button" [disabled]="!store || (!file && !pasted.trim())" (click)="read()">{{ 'px.read' | t }}</button>
 
       @if (lines().length) {
         <h3>{{ 'px.check' | t }}</h3>
@@ -94,6 +95,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
           @for (l of lines(); track $index) {
             <li class="item">
               <input class="check" type="checkbox" [(ngModel)]="l.keep" [name]="'k' + $index">
+              @if (l.photo) {<img [src]="'data:image/jpeg;base64,' + l.photo" alt="" width="56" height="56" style="object-fit:cover;border-radius:10px;flex:none">}
               <input class="in grow" [name]="'p' + $index" [(ngModel)]="l.product">
               <input class="in" type="number" step="0.01" min="0" style="width:6rem" [name]="'v' + $index" [(ngModel)]="l.price">
             </li>
@@ -110,7 +112,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
         <h3>{{ s }}</h3>
         <ul class="list">
           @for (o of byStore(s); track o.id) {
-            <li class="item"><div class="grow">{{ o.product }}@if (o.unit) { <span class="muted small">· {{ o.unit }}</span>}</div>
+            <li class="item">@if (o.hasPhoto) {<app-offer-photo [id]="o.id" [size]="56" />}<div class="grow">{{ o.product }}@if (o.unit) { <span class="muted small">· {{ o.unit }}</span>}</div>
               <strong>{{ fmt(o.price) }}</strong>
               @if (o.validUntil) {<span class="muted small">{{ 'px.until' | t }} {{ d(o.validUntil) }}</span>}
               <button class="icon-btn" type="button" (click)="remove(o)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button></li>
@@ -197,7 +199,7 @@ export class PricesPage implements OnInit {
     this.seconds.set(0);
     this.busy.set(true);
     this.timer = setInterval(() => this.seconds.set(this.seconds() + 1), 1000);
-    this.api.postForm<{ validUntil: string | null; offers: { product: string; price: number; unit?: string | null }[] }>('/offers/import', form).subscribe({
+    this.api.postForm<{ validUntil: string | null; offers: { product: string; price: number; unit?: string | null; photo?: string | null }[] }>('/offers/import', form).subscribe({
       next: (r) => {
         this.stop();
         this.until = r.validUntil ?? '';
@@ -214,7 +216,7 @@ export class PricesPage implements OnInit {
   }
 
   save() {
-    const offers = this.lines().filter((l) => l.keep && l.product.trim() && l.price > 0).map((l) => ({ product: l.product.trim(), price: Number(l.price), unit: l.unit ?? null }));
+    const offers = this.lines().filter((l) => l.keep && l.product.trim() && l.price > 0).map((l) => ({ product: l.product.trim(), price: Number(l.price), unit: l.unit ?? null, photo: l.photo ?? null }));
     this.api.post<OfferView[]>('/offers', { store: this.store.trim(), validUntil: this.until || null, offers }).subscribe({
       next: (o) => { this.offers.set(o); this.lines.set([]); this.file = null; this.fileName = ''; this.pasted = ''; this.toast.show(this.i18n.t('fam.saved')); },
       error: (e) => this.error.set(errCode(e)),
