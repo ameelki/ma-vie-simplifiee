@@ -43,6 +43,7 @@ public class PromoFeedJob {
     @SuppressWarnings("unchecked")
     public int run() {
         int done = 0;
+        if (!ai.enabled()) return 0; // IA désactivée : rien à faire
         for (String part : feeds.split(";")) {
             String[] kv = part.trim().split("\\|", 2);
             if (kv.length != 2) continue;

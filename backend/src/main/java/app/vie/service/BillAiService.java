@@ -50,6 +50,7 @@ public class BillAiService {
     private final String apiKey;
     private final String apiModel;
     private final boolean useApi;
+    private final boolean switchOn;
     private final ObjectMapper mapper;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
@@ -61,7 +62,9 @@ public class BillAiService {
      */
     public BillAiService(@Value("${app.ai.url:http://localhost:11434}") String url, @Value("${app.ai.model:gemma3:4b}") String model,
                          @Value("${app.ai.api-url:https://generativelanguage.googleapis.com/v1beta/openai}") String apiUrl,
-                         @Value("${app.ai.api-key:}") String apiKey, @Value("${app.ai.api-model:}") String apiModel, ObjectMapper mapper) {
+                         @Value("${app.ai.api-key:}") String apiKey, @Value("${app.ai.api-model:}") String apiModel,
+                         @Value("${app.ai.enabled:false}") boolean switchOn, ObjectMapper mapper) {
+        this.switchOn = switchOn;
         this.url = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
         this.model = model;
         apiUrl = apiUrl == null || apiUrl.isBlank() ? "https://generativelanguage.googleapis.com/v1beta/openai" : apiUrl.trim();
@@ -74,6 +77,7 @@ public class BillAiService {
 
     /** Vrai si l'IA est utilisable : API configurée, ou serveur Ollama qui répond. */
     public boolean enabled() {
+        if (!switchOn) return false; // interrupteur général : AI_ENABLED=true pour activer toutes les fonctions IA
         if (useApi) return !apiModel.isEmpty();
         try {
             HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/tags")).timeout(Duration.ofSeconds(2)).GET().build();

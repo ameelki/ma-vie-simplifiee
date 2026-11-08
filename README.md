@@ -43,6 +43,8 @@ Seul l'administrateur publie : `PROMO_ADMINS` (e-mails séparés par des virgule
 Magasins acceptés (Luxembourg uniquement) : Cactus, Naturata, Delhaize, Lidl, Aldi. Un prospectus PDF est lu page par page (6 pages au maximum) et la photo de chaque produit est découpée dans la page ; pour de meilleurs découpages, utilisez un modèle vision plus précis : `ollama pull qwen2.5vl:7b` puis `OLLAMA_MODEL=qwen2.5vl:7b`.
 L'IA ne consulte pas Internet : les prix viennent des documents que vous importez. Les offres expirées disparaissent automatiquement.
 
+> **Les fonctions IA sont désactivées par défaut** (interrupteur `AI_ENABLED`, absent = désactivé) : aucun bouton d'import n'apparaît et rien n'est envoyé à une IA. Pour les activer, ajoutez `AI_ENABLED=true` en plus de la configuration ci-dessous (ou d'Ollama en local).
+
 ## IA gratuite en ligne (Gemini, Groq, OpenRouter…) au lieu d'Ollama
 
 Sur Render, Ollama ne peut pas tourner. Utilisez plutôt l'offre gratuite d'un fournisseur d'IA (limites à vérifier chez eux, elles changent) : créez une clé API, puis renseignez ces variables (backend en local ou sur Render). Dès que `AI_API_KEY` est définie, l'API remplace Ollama.
@@ -55,7 +57,7 @@ Sur Render, Ollama ne peut pas tourner. Utilisez plutôt l'offre gratuite d'un f
 
 Test en local (PowerShell) :
 ```
-$env:AI_API_KEY="votre_cle"; $env:AI_MODEL="nom_du_modele"; mvn spring-boot:run
+$env:AI_ENABLED="true"; $env:AI_API_KEY="votre_cle"; $env:AI_MODEL="nom_du_modele"; mvn spring-boot:run
 ```
 Les boutons d'import (factures, promos) apparaissent seulement quand une IA est disponible. Les documents envoyés partent chez le fournisseur : à éviter pour des factures sensibles si cela vous gêne.
 
