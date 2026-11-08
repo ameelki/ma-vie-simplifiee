@@ -174,3 +174,14 @@ label.f { display: grid; gap: .3rem; font-size: .8rem; font-weight: 600; color: 
 .spinner { width: 56px; height: 56px; margin: 0 auto 1rem; border-radius: 50%; border: 5px solid var(--sand); border-top-color: var(--green); animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.5s !important; } }
+
+/* Bandeau des promos (Courses) */
+.promo-banner { background: linear-gradient(135deg, #fff4d6, #ffe4b8); border: 1px solid #f0c978; border-radius: 16px; padding: .8rem 1rem; margin-bottom: 1rem; }
+.promo-head { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .1rem; }
+.promo-head a { font-weight: 600; text-decoration: underline; color: inherit; }
+.promo-row { display: flex; gap: .6rem; overflow-x: auto; padding: .4rem 0 .2rem; scroll-snap-type: x proximity; }
+.promo-chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; gap: .15rem; background: #fff; border-radius: 12px; padding: .55rem .7rem; min-width: 10.5rem; max-width: 14rem; }
+.promo-price { font-weight: 800; color: #b3261e; font-size: 1.1rem; }
+.promo-name { font-weight: 600; }
+.promo-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: -.2rem 0 .6rem; padding: .4rem .5rem; background: #fff4d6; border-radius: 12px; }
+.promo-suggest .promo-chip { flex-direction: row; gap: .3rem; min-width: 0; max-width: none; padding: .25rem .5rem; }

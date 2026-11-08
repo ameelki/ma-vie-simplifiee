@@ -50,3 +50,13 @@ export function compressImage(file: File, maxSize = 1600, quality = 0.85): Promi
     img.src = url;
   });
 }
+
+const normTxt = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+const stemWord = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : w);
+
+/** Offres dont le nom contient tous les mots de l'article (accents et pluriels ignorés). */
+export function matchOffers<T extends { product: string }>(item: string, offers: T[]): T[] {
+  const words = normTxt(item).split(' ').filter((w) => w.length >= 3).map(stemWord);
+  if (!words.length) return [];
+  return offers.filter((o) => { const p = ' ' + normTxt(o.product) + ' '; return words.every((w) => p.includes(w)); });
+}

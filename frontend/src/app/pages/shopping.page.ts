@@ -1,8 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Api } from '../core/api.service';
 import { DataService } from '../core/data.service';
-import { TPipe } from '../core/i18n.service';
+import { OfferView } from '../core/models';
+import { I18n, TPipe } from '../core/i18n.service';
+import { fmtDate, matchOffers, money } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
@@ -16,14 +19,39 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
       <a class="btn ghost" routerLink="/prix">{{ 'px.open' | t }}</a>
       @if (!data.canEdit('SHOPPING')) {<span class="pill">{{ 'c.viewonly' | t }}</span>}</div>
     @if (!data.can('SHOPPING')) {<div class="card empty">{{ 'c.noAccess' | t }}</div>} @else {
+    @if (offers().length) {
+      <div class="promo-banner">
+        <div class="promo-head"><strong>{{ 'px.promoTitle' | t }}</strong>
+          <a routerLink="/prix">{{ 'px.promoAll' | t }}</a></div>
+        <div class="promo-row">
+          @for (p of promos(); track p.id) {
+            <div class="promo-chip">
+              <span class="promo-price">{{ fmt(p.price) }}</span>
+              <span class="promo-name">{{ p.product }}</span>
+              <span class="muted small">{{ p.store }}@if (p.validUntil) { · {{ 'px.until' | t }} {{ d(p.validUntil) }}}</span>
+              @if (data.canEdit('SHOPPING')) {<button class="btn ghost small" type="button" (click)="addPromo(p)">{{ 'px.promoAdd' | t }}</button>}
+            </div>
+          } @empty {<span class="muted small">{{ 'px.promoNone' | t }}</span>}
+        </div>
+      </div>
+    } @else {
+      <div class="promo-banner"><div class="promo-head"><strong>{{ 'px.promoTitle' | t }}</strong>
+        <a routerLink="/prix">{{ 'px.promoImport' | t }}</a></div></div>
+    }
     <div class="grid two">
       <div class="card">
         <h2>{{ 'shop.list' | t }}</h2>
         @if (data.canEdit('SHOPPING')) {
           <form class="row" (ngSubmit)="addItem()" style="margin-bottom:.6rem;flex-wrap:nowrap">
-            <input class="in grow" name="item" [(ngModel)]="item" [placeholder]="'shop.item' | t">
+            <input class="in grow" name="item" [(ngModel)]="item" [placeholder]="'shop.item' | t" autocomplete="off">
             <button class="btn" type="submit" [disabled]="!item.trim()"><app-icon name="plus" [size]="18" /></button>
           </form>
+        }
+        @if (suggest().length) {
+          <div class="promo-suggest">
+            <span class="small">{{ 'px.promoFor' | t }}</span>
+            @for (p of suggest(); track p.id) {<span class="promo-chip small"><span class="promo-price">{{ fmt(p.price) }}</span> {{ p.product }} · {{ p.store }}</span>}
+          </div>
         }
         @if (items().length) {
           <ul class="list">
@@ -64,8 +92,24 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
     }
   `,
 })
-export class ShoppingPage {
+export class ShoppingPage implements OnInit {
   data = inject(DataService);
+  private api = inject(Api);
+  private i18n = inject(I18n);
+  offers = signal<OfferView[]>([]);
+  ngOnInit() { this.api.get<OfferView[]>('/offers').subscribe({ next: (o) => this.offers.set(o), error: () => undefined }); }
+  fmt(v: number) { return money(this.i18n, v); }
+  d(v: string) { return fmtDate(this.i18n, v); }
+  /** Promos qui correspondent à ma liste d'abord, puis les moins chères. */
+  promos = computed(() => {
+    const titles = this.items().filter((e) => !e.done).map((e) => e.title);
+    const hit = this.offers().filter((o) => titles.some((t) => matchOffers(t, [o]).length));
+    const rest = [...this.offers()].filter((o) => !hit.includes(o)).sort((a, b) => a.price - b.price);
+    return [...hit, ...rest].slice(0, 6);
+  });
+  /** Pendant la saisie d'un article : offres correspondantes. */
+  suggest() { return this.item.trim().length >= 3 ? matchOffers(this.item, this.offers()).sort((a, b) => a.price - b.price).slice(0, 3) : []; }
+  addPromo(p: OfferView) { this.data.create({ module: 'SHOPPING', title: p.product, kind: 'LIST', done: false }); }
   days = DAYS;
   item = '';
   mealText: Record<string, string> = {};
