@@ -28,54 +28,23 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
 
     @if (data.ownerId() === null) {
       <div class="card" style="margin-top:1rem">
-        <h2>{{ 'budget.account' | t }}</h2>
-        <div class="val" style="font-family:var(--serif);font-size:1.8rem;color:var(--forest)">{{ m(accountBalance()) }}</div>
-        <p class="muted small">{{ 'budget.accountHint' | t }}</p>
-        <form class="row" (ngSubmit)="saveOpening()" style="margin-top:.6rem">
-          <label class="f grow">{{ 'budget.opening' | t }}
+        <h2>{{ 'bp.title' | t }}</h2>
+        <form class="row" (ngSubmit)="saveOpening()">
+          <label class="f grow">{{ 'bp.balance' | t }}
             <input name="opening" type="number" step="0.01" inputmode="decimal" [(ngModel)]="opening" placeholder="0.00"></label>
           <button class="btn" type="submit">{{ 'c.save' | t }}</button>
         </form>
-      </div>
-    }
-    @if (data.ownerId() === null) {
-      <div class="card" style="margin-top:1rem">
-        <h2>{{ 'bp.title' | t }}</h2>
-        <form class="row" (ngSubmit)="savePlan()">
-          <label class="f grow">{{ 'bp.income' | t }}
-            <input name="minc" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="monthlyIncome" placeholder="0.00"></label>
-          <button class="btn" type="submit">{{ 'c.save' | t }}</button>
-        </form>
-        <h3 style="margin-top:1rem">{{ 'bp.fixed' | t }}</h3>
-        @if (charges.length) {
-          <ul class="list">
-            @for (c of charges; track $index) {
-              <li class="item"><div class="grow t">{{ c.label }}</div><div class="amount out-c">{{ m(c.amount) }}</div>
-                <button class="icon-btn" type="button" (click)="removeCharge($index)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button></li>
-            }
-          </ul>
-        }
-        <form class="row" (ngSubmit)="addCharge()" style="margin-top:.5rem">
-          <label class="f grow" style="min-width:8rem">{{ 'bp.label' | t }}<input name="clabel" [(ngModel)]="newLabel" maxlength="60"></label>
-          <label class="f" style="width:8rem">{{ 'c.amount' | t }}<input name="camount" type="number" step="0.01" min="0" inputmode="decimal" [(ngModel)]="newAmount"></label>
-          <button class="btn ghost" type="submit" [disabled]="!newLabel.trim() || !newAmount">{{ 'c.add' | t }}</button>
-        </form>
-
-        <h3 style="margin-top:1.2rem">{{ 'bp.calc' | t }}</h3>
-        <ul class="list">
-          <li class="item"><div class="grow">{{ 'bp.income' | t }} + {{ 'bp.otherInc' | t }}</div><div class="amount in-c">{{ m(planIncome()) }}</div></li>
-          <li class="item"><div class="grow">{{ 'bp.totalFixed' | t }}</div><div class="amount out-c">−{{ m(fixedTotal()) }}</div></li>
-          <li class="item"><div class="grow">{{ 'bp.variable' | t }}</div><div class="amount out-c">−{{ m(expense()) }}</div></li>
+        <ul class="list" style="margin-top:.8rem">
+          <li class="item"><div class="grow">{{ 'bp.balance' | t }}</div><div class="amount">{{ m(balance()) }}</div></li>
+          <li class="item"><div class="grow">{{ 'bp.toPay' | t }} <span class="muted small">({{ unpaid().length }})</span></div><div class="amount out-c">−{{ m(unpaidTotal()) }}</div></li>
           <li class="item"><div class="grow"><strong>{{ 'bp.left' | t }}</strong></div><div class="amount" [class.in-c]="left() >= 0" [class.out-c]="left() < 0"><strong>{{ m(left()) }}</strong></div></li>
           <li class="item"><div class="grow">{{ 'bp.perDay' | t: { n: daysLeft() } }}</div><div class="amount">{{ m(perDay()) }}</div></li>
-          <li class="item"><div class="grow">{{ 'bp.savings' | t }}</div><div class="amount">{{ savingsRate() }} %</div></li>
-          @if (billsLeft() > 0) {
-            <li class="item"><div class="grow">{{ 'bp.billsLeft' | t }}</div><div class="amount out-c">−{{ m(billsLeft()) }}</div></li>
-            <li class="item"><div class="grow"><strong>{{ 'bp.afterBills' | t }}</strong></div><div class="amount" [class.in-c]="left() - billsLeft() >= 0" [class.out-c]="left() - billsLeft() < 0"><strong>{{ m(left() - billsLeft()) }}</strong></div></li>
+          @if (next(); as nx) {
+            <li class="item"><div class="grow">{{ 'bp.next' | t }}<div class="s">{{ nx.title }} · {{ d(nx.date) }}</div></div><div class="amount out-c">{{ m(nx.amount) }}</div></li>
           }
         </ul>
-        <div style="height:10px;border-radius:99px;background:var(--sand);overflow:hidden;margin-top:.6rem" role="img" [attr.aria-label]="'bp.left' | t">
-          <div [style.width.%]="spentPct()" [style.background]="spentPct() > 90 ? 'var(--danger)' : 'var(--green)'" style="height:100%"></div></div>
+        <div style="height:10px;border-radius:99px;background:var(--sand);overflow:hidden;margin-top:.6rem" role="img" [attr.aria-label]="'bp.toPay' | t">
+          <div [style.width.%]="usedPct()" [style.background]="usedPct() > 90 ? 'var(--danger)' : 'var(--green)'" style="height:100%"></div></div>
         <p class="muted small" style="margin-top:.6rem">{{ 'bp.note' | t }}</p>
       </div>
     }
@@ -159,9 +128,6 @@ export class BudgetPage {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   opening: number | null = this.auth.user()?.openingBalance ?? null;
-  monthlyIncome: number | null = this.auth.user()?.monthlyIncome ?? null;
-  charges: { label: string; amount: number }[] = this.parseCharges(this.auth.user()?.fixedCharges);
-  newLabel = ''; newAmount: number | null = null;
   cats = CATS;
   tab = signal<'now' | 'analysis'>('now');
   kind = 'EXPENSE'; cat = 'FOOD'; title = ''; amount: number | null = null; date = today();
@@ -171,25 +137,19 @@ export class BudgetPage {
   rows = computed(() => this.all().filter((e) => (e.date || '').startsWith(this.month)).sort((a, b) => (b.date || '').localeCompare(a.date || '')));
   income = computed(() => this.rows().filter((e) => e.kind === 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   expense = computed(() => this.rows().filter((e) => e.kind !== 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
-  private parseCharges(raw: string | null | undefined): { label: string; amount: number }[] {
-    try { const a = JSON.parse(raw || '[]'); return Array.isArray(a) ? a.map((c) => ({ label: String(c.label), amount: Number(c.amount) })) : []; } catch { return []; }
-  }
-  /** Revenu du mois = revenu mensuel configuré + revenus saisis ce mois-ci dans la liste. */
-  planIncome = computed(() => Number(this.auth.user()?.monthlyIncome ?? 0) + this.income());
-  fixedTotal = computed(() => this.parseCharges(this.auth.user()?.fixedCharges).reduce((s, c) => s + c.amount, 0));
-  left = computed(() => this.planIncome() - this.fixedTotal() - this.expense());
+  /** Mon solde : saisi par l'utilisateur. Tout le reste se calcule à partir des factures non payées (menu Factures). */
+  balance = computed(() => Number(this.auth.user()?.openingBalance ?? 0));
+  /** Factures non payées échues ce mois-ci ou avant (en retard comprises). */
+  unpaid = computed(() => {
+    const end = this.month + '-31';
+    return this.data.list('BILLS').filter((e) => e.status !== 'PAID' && (e.date || '') <= end).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  });
+  unpaidTotal = computed(() => this.unpaid().reduce((s, e) => s + Number(e.amount || 0), 0));
+  next = computed(() => this.unpaid()[0] ?? null);
+  left = computed(() => this.balance() - this.unpaidTotal());
   daysLeft = computed(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate() + 1; });
   perDay = computed(() => Math.max(0, this.left()) / this.daysLeft());
-  savingsRate = computed(() => { const i = this.planIncome(); return i > 0 ? Math.round((this.left() / i) * 100) : 0; });
-  spentPct = computed(() => { const i = this.planIncome(); return i > 0 ? Math.min(100, Math.max(0, Math.round(((this.fixedTotal() + this.expense()) / i) * 100))) : 0; });
-  /** Factures du menu Factures pas encore payées et échues ce mois-ci. */
-  billsLeft = computed(() => this.data.list('BILLS').filter((e) => e.status !== 'PAID' && (e.date || '').startsWith(this.month)).reduce((s, e) => s + Number(e.amount || 0), 0));
-  /** Solde du compte = solde de départ + tous les revenus - toutes les dépenses jusqu'à aujourd'hui. */
-  accountBalance = computed(() => {
-    const start = Number(this.auth.user()?.openingBalance ?? 0);
-    const t = today();
-    return start + this.all().filter((e) => !e.date || e.date <= t).reduce((s, e) => s + (e.kind === 'INCOME' ? 1 : -1) * Number(e.amount || 0), 0);
-  });
+  usedPct = computed(() => { const b = this.balance(); return b > 0 ? Math.min(100, Math.round((this.unpaidTotal() / b) * 100)) : (this.unpaidTotal() > 0 ? 100 : 0); });
   slices = computed(() => {
     const sums: Record<string, number> = {};
     for (const e of this.rows().filter((x) => x.kind !== 'INCOME')) { const c = e.category || 'OTHER'; sums[c] = (sums[c] || 0) + Number(e.amount || 0); }
@@ -221,17 +181,6 @@ export class BudgetPage {
 
   m(v: number | null | undefined) { return money(this.i18n, v); }
   d(v: string | null | undefined) { return fmtDate(this.i18n, v); }
-
-  savePlan(fixed = this.charges) {
-    this.api.put<User>('/me/plan', { monthlyIncome: this.monthlyIncome === null || (this.monthlyIncome as unknown) === '' ? null : Number(this.monthlyIncome), fixed }).subscribe({
-      next: (u) => { this.auth.setUser(u); this.charges = this.parseCharges(u.fixedCharges); this.toast.show(this.i18n.t('fam.saved')); },
-    });
-  }
-  addCharge() {
-    this.savePlan([...this.charges, { label: this.newLabel.trim(), amount: Number(this.newAmount) }]);
-    this.newLabel = ''; this.newAmount = null;
-  }
-  removeCharge(i: number) { this.savePlan(this.charges.filter((_, k) => k !== i)); }
 
   saveOpening() {
     this.api.put<User>('/me/opening', { amount: this.opening === null || (this.opening as unknown) === '' ? null : Number(this.opening) }).subscribe({
