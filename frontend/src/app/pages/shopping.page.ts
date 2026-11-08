@@ -38,7 +38,8 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
       </div>
     } @else {
       <div class="promo-banner"><div class="promo-head"><strong>{{ 'px.promoTitle' | t }}</strong>
-        <a routerLink="/prix">{{ 'px.promoAll' | t }}</a></div><span class="muted small">{{ 'px.promoNone' | t }}</span></div>
+        <a routerLink="/prix">{{ 'px.promoAll' | t }}</a></div><span class="muted small">{{ 'px.promoNone' | t }}</span>
+        @if (canPublish()) {<div class="row" style="margin-top:.5rem"><button class="btn small" type="button" (click)="demo()">{{ 'px.demo' | t }}</button></div>}</div>
     }
     <div class="grid two">
       <div class="card">
@@ -99,7 +100,12 @@ export class ShoppingPage implements OnInit {
   private api = inject(Api);
   private i18n = inject(I18n);
   offers = signal<OfferView[]>([]);
-  ngOnInit() { this.api.get<OfferView[]>('/offers').subscribe({ next: (o) => this.offers.set(o), error: () => undefined }); }
+  canPublish = signal(false);
+  ngOnInit() {
+    this.api.get<OfferView[]>('/offers').subscribe({ next: (o) => this.offers.set(o), error: () => undefined });
+    this.api.get<{ canPublish: boolean }>('/offers/can-publish').subscribe({ next: (r) => this.canPublish.set(r.canPublish), error: () => undefined });
+  }
+  demo() { this.api.post<OfferView[]>('/offers/demo').subscribe({ next: (o) => this.offers.set(o), error: () => undefined }); }
   fmt(v: number) { return money(this.i18n, v); }
   d(v: string) { return fmtDate(this.i18n, v); }
   /** Promos qui correspondent à ma liste d'abord, puis les moins chères. */
