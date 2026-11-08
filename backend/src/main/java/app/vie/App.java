@@ -10,6 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class App {
     public static void main(String[] args) {
+        // Heures et dates (dernière activité, échéances du jour…) en heure du Luxembourg, même sur un serveur en UTC
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Europe/Luxembourg"));
         SpringApplication.run(App.class, args);
     }
 }

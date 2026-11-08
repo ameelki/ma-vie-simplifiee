@@ -2,6 +2,7 @@ package app.vie.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,4 +20,9 @@ public class User extends BaseEntity {
     public Enums.Role role = Enums.Role.USER;
     public boolean active = true;
     public LocalDateTime createdAt = LocalDateTime.now();
+    /** Dernière activité (mise à jour au plus toutes les 5 minutes). */
+    public LocalDateTime lastSeenAt;
+    /** Solde de départ du compte, saisi par l'utilisateur dans Budget. */
+    @Column(precision = 12, scale = 2)
+    public BigDecimal openingBalance;
 }

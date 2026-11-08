@@ -47,6 +47,18 @@ public class MeController {
         return users.save(u);
     }
 
+    public record OpeningRequest(Double amount) {}
+
+    /** Solde de départ de mon compte (Budget). Vide = aucun. */
+    @PutMapping("/opening")
+    public User opening(@RequestBody OpeningRequest r, Authentication auth) {
+        User u = me(current, auth);
+        if (r.amount() == null) u.openingBalance = null;
+        else if (Math.abs(r.amount()) > 1e9) throw Errors.bad("ERR_VALIDATION");
+        else u.openingBalance = java.math.BigDecimal.valueOf(r.amount()).setScale(2, java.math.RoundingMode.HALF_UP);
+        return users.save(u);
+    }
+
     /** Changer mon mot de passe (le mot de passe actuel est demandé). */
     @PutMapping("/password")
     public void password(@Valid @RequestBody Dto.PasswordRequest r, Authentication auth) {

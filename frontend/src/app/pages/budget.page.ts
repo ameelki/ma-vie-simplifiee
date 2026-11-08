@@ -1,8 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Api } from '../core/api.service';
+import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
+import { ToastService } from '../core/toast.service';
 import { I18n, TPipe } from '../core/i18n.service';
-import { Entry } from '../core/models';
+import { Entry, User } from '../core/models';
 import { fmtDate, money, today } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
@@ -22,6 +25,19 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
       <div class="card"><div class="stat"><div class="ico"><app-icon name="bills" /></div><div><div class="val amount out-c">{{ m(expense()) }}</div><div class="lab">{{ 'budget.expense' | t }}</div></div></div></div>
       <div class="card hero-card"><div class="stat"><div><div class="val" style="color:#fff">{{ m(income() - expense()) }}</div><div class="lab" style="color:var(--sage)">{{ 'budget.balance' | t }}</div></div></div></div>
     </div>
+
+    @if (data.ownerId() === null) {
+      <div class="card" style="margin-top:1rem">
+        <h2>{{ 'budget.account' | t }}</h2>
+        <div class="val" style="font-family:var(--serif);font-size:1.8rem;color:var(--forest)">{{ m(accountBalance()) }}</div>
+        <p class="muted small">{{ 'budget.accountHint' | t }}</p>
+        <form class="row" (ngSubmit)="saveOpening()" style="margin-top:.6rem">
+          <label class="f grow">{{ 'budget.opening' | t }}
+            <input name="opening" type="number" step="0.01" inputmode="decimal" [(ngModel)]="opening" placeholder="0.00"></label>
+          <button class="btn" type="submit">{{ 'c.save' | t }}</button>
+        </form>
+      </div>
+    }
 
     <div class="tabs" style="margin-top:1rem">
       <button class="tab" type="button" [class.on]="tab() === 'now'" (click)="tab.set('now')">{{ 'budget.tabNow' | t }}</button>
@@ -98,6 +114,10 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
 export class BudgetPage {
   data = inject(DataService);
   private i18n = inject(I18n);
+  private api = inject(Api);
+  private auth = inject(AuthService);
+  private toast = inject(ToastService);
+  opening: number | null = this.auth.user()?.openingBalance ?? null;
   cats = CATS;
   tab = signal<'now' | 'analysis'>('now');
   kind = 'EXPENSE'; cat = 'FOOD'; title = ''; amount: number | null = null; date = today();
@@ -107,6 +127,12 @@ export class BudgetPage {
   rows = computed(() => this.all().filter((e) => (e.date || '').startsWith(this.month)).sort((a, b) => (b.date || '').localeCompare(a.date || '')));
   income = computed(() => this.rows().filter((e) => e.kind === 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   expense = computed(() => this.rows().filter((e) => e.kind !== 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
+  /** Solde du compte = solde de départ + tous les revenus - toutes les dépenses jusqu'à aujourd'hui. */
+  accountBalance = computed(() => {
+    const start = Number(this.auth.user()?.openingBalance ?? 0);
+    const t = today();
+    return start + this.all().filter((e) => !e.date || e.date <= t).reduce((s, e) => s + (e.kind === 'INCOME' ? 1 : -1) * Number(e.amount || 0), 0);
+  });
   slices = computed(() => {
     const sums: Record<string, number> = {};
     for (const e of this.rows().filter((x) => x.kind !== 'INCOME')) { const c = e.category || 'OTHER'; sums[c] = (sums[c] || 0) + Number(e.amount || 0); }
@@ -138,6 +164,12 @@ export class BudgetPage {
 
   m(v: number | null | undefined) { return money(this.i18n, v); }
   d(v: string | null | undefined) { return fmtDate(this.i18n, v); }
+
+  saveOpening() {
+    this.api.put<User>('/me/opening', { amount: this.opening === null || (this.opening as unknown) === '' ? null : Number(this.opening) }).subscribe({
+      next: (u) => { this.auth.setUser(u); this.toast.show(this.i18n.t('fam.saved')); },
+    });
+  }
 
   add() {
     const payload: Partial<Entry> & { module: 'BUDGET'; title: string } = {

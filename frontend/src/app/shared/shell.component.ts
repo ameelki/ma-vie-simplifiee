@@ -8,7 +8,7 @@ import { Module } from '../core/models';
 import { IconComponent } from './icon.component';
 import { LogoComponent } from './logo.component';
 
-interface NavItem { path: string; key: string; icon: string; module?: Module; personal?: boolean; }
+interface NavItem { path: string; key: string; icon: string; module?: Module; personal?: boolean; adminOnly?: boolean; }
 
 const NAV: NavItem[] = [
   { path: 'accueil', key: 'nav.home', icon: 'home', personal: true },
@@ -21,6 +21,7 @@ const NAV: NavItem[] = [
   { path: 'assistant', key: 'nav.assistant', icon: 'assistant', personal: true },
   { path: 'famille', key: 'nav.family', icon: 'family' },
   { path: 'profil', key: 'nav.profile', icon: 'profile' },
+  { path: 'admin', key: 'nav.admin', icon: 'star', adminOnly: true },
 ];
 
 const MAIN = ['accueil', 'budget', 'factures', 'courses'];
@@ -115,6 +116,7 @@ export class ShellComponent implements OnInit {
   private api = inject(Api);
   langs = LANGS;
   more = signal(false);
+  isAdmin = signal(false);
   /** Barre du bas : 4 onglets principaux, le reste dans « Plus » (évite une barre de 10 onglets à faire défiler). */
   mainTabs = computed(() => this.items().filter((n) => MAIN.includes(n.path)));
   moreItems = computed(() => [...this.items().filter((n) => !MAIN.includes(n.path)), ...EXTRA]);
@@ -122,6 +124,7 @@ export class ShellComponent implements OnInit {
   items = computed(() => {
     const viewing = this.data.ownerId() !== null;
     return NAV.filter((n) => {
+      if (n.adminOnly) return this.isAdmin();
       if (n.personal) return !viewing || n.path === 'famille';
       if (n.module) return this.data.can(n.module) !== null;
       return true;
@@ -130,6 +133,7 @@ export class ShellComponent implements OnInit {
 
   ngOnInit() {
     this.data.bootstrap();
+    this.api.get<{ admin: boolean }>('/admin/status').subscribe({ next: (r) => this.isAdmin.set(!!r.admin), error: () => undefined });
     // Si la langue du profil diffère de celle du navigateur, la langue choisie ici a la priorité côté interface.
   }
 

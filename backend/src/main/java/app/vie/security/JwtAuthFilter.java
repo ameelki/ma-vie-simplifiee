@@ -34,6 +34,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (email != null) {
                 User u = users.findByEmailIgnoreCase(email).orElse(null);
                 if (u != null && u.active) {
+                    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                    if (u.lastSeenAt == null || u.lastSeenAt.isBefore(now.minusMinutes(5))) {
+                        u.lastSeenAt = now;
+                        try { users.save(u); } catch (Exception ignored) { }
+                    }
                     var auth = new UsernamePasswordAuthenticationToken(
                             u.email, null, List.of(new SimpleGrantedAuthority("ROLE_" + u.role.name())));
                     SecurityContextHolder.getContext().setAuthentication(auth);

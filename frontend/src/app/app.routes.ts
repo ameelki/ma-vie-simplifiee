@@ -18,6 +18,7 @@ export const routes: Routes = [
       { path: 'documents', loadComponent: () => import('./pages/documents.page').then((m) => m.DocumentsPage) },
       { path: 'courses', loadComponent: () => import('./pages/shopping.page').then((m) => m.ShoppingPage) },
       { path: 'prix', loadComponent: () => import('./pages/prices.page').then((m) => m.PricesPage) },
+      { path: 'admin', loadComponent: () => import('./pages/admin.page').then((m) => m.AdminPage) },
       { path: 'taches', loadComponent: () => import('./pages/tasks.page').then((m) => m.TasksPage) },
       { path: 'assistant', loadComponent: () => import('./pages/assistant.page').then((m) => m.AssistantPage) },
       { path: 'famille', loadComponent: () => import('./pages/family.page').then((m) => m.FamilyPage) },
