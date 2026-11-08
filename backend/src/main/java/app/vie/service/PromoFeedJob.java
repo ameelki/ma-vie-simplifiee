@@ -3,6 +3,7 @@ package app.vie.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.Map;
  * Mise à jour automatique des promos : chaque lundi à 7 h, télécharge les prospectus configurés (PROMO_FEEDS) et les fait lire par l'IA.
  * Les adresses des prospectus changent souvent : elles sont à mettre à jour à la main dans PROMO_FEEDS.
  */
+@Lazy(false) // l'application démarre en mode paresseux : sans ceci, la tâche du lundi ne serait jamais enregistrée
 @Service
 public class PromoFeedJob {
     private static final Logger log = LoggerFactory.getLogger(PromoFeedJob.class);
