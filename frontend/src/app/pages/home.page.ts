@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
 import { I18n, TPipe } from '../core/i18n.service';
-import { addDays, fmtDate, money, today } from '../core/util';
+import { addDays, billsAsExpenses, fmtDate, money, today } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
 @Component({
@@ -65,7 +65,7 @@ export class HomePage implements OnInit {
   });
   first = computed(() => (this.auth.user()?.name || '').split(' ')[0]);
   private month = today().substring(0, 7);
-  balance = computed(() => (this.data.ownerId() === null ? Number(this.auth.user()?.monthlyIncome ?? 0) : 0) + this.data.list('BUDGET').filter((e) => (e.date || '').startsWith(this.month)).reduce((s, e) => s + (e.kind === 'INCOME' ? 1 : -1) * Number(e.amount || 0), 0));
+  balance = computed(() => (this.data.ownerId() === null ? Number(this.auth.user()?.monthlyIncome ?? 0) : 0) + [...this.data.list('BUDGET'), ...billsAsExpenses(this.data.list('BILLS'))].filter((e) => (e.date || '').startsWith(this.month)).reduce((s, e) => s + (e.kind === 'INCOME' ? 1 : -1) * Number(e.amount || 0), 0));
   bills = computed(() => this.data.list('BILLS').filter((e) => e.status !== 'PAID'));
   upcoming = computed(() => this.data.list('AGENDA').filter((e) => (e.date || '') >= today()));
   openTasks = computed(() => this.data.list('TASKS').filter((e) => e.status !== 'DONE').length);

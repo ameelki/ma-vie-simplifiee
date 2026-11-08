@@ -60,3 +60,10 @@ export function matchOffers<T extends { product: string }>(item: string, offers:
   if (!words.length) return [];
   return offers.filter((o) => { const p = ' ' + normTxt(o.product) + ' '; return words.every((w) => p.includes(w)); });
 }
+
+const BILL_TO_BUDGET: Record<string, string> = { HOUSING: 'HOUSING', ENERGY: 'HOUSING', WATER: 'HOUSING', INTERNET: 'HOUSING', PHONE: 'HOUSING', HEALTH: 'HEALTH' };
+
+/** Une facture payée compte comme une dépense du budget (catégorie ramenée à celles du budget). */
+export function billsAsExpenses<T extends { status?: string | null; category?: string | null; kind?: string | null }>(bills: T[]): T[] {
+  return bills.filter((b) => b.status === 'PAID').map((b) => ({ ...b, kind: 'EXPENSE', category: BILL_TO_BUDGET[b.category || ''] || 'OTHER' }));
+}

@@ -4,7 +4,7 @@ import { AuthService } from '../core/auth.service';
 import { DataService } from '../core/data.service';
 import { I18n, TPipe } from '../core/i18n.service';
 import { Entry } from '../core/models';
-import { fmtDate, money, today } from '../core/util';
+import { billsAsExpenses, fmtDate, money, today } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
 const CATS = ['HOUSING', 'FOOD', 'TRANSPORT', 'LEISURE', 'HEALTH', 'OTHER'];
@@ -84,9 +84,9 @@ const COLORS: Record<string, string> = { HOUSING: '#173F38', FOOD: '#2E7D64', TR
         <ul class="list">
           @for (e of rows(); track e.id) {
             <li class="item">
-              <div class="grow"><div class="t">{{ e.title }}</div><div class="s">{{ d(e.date) }} · {{ 'cat.' + (e.category || 'OTHER') | t }}</div></div>
+              <div class="grow"><div class="t">{{ e.title }}@if (e.module === 'BILLS') { <span class="pill">{{ 'nav.bills' | t }}</span>}</div><div class="s">{{ d(e.date) }} · {{ 'cat.' + (e.category || 'OTHER') | t }}</div></div>
               <div class="amount" [class.in-c]="e.kind === 'INCOME'" [class.out-c]="e.kind !== 'INCOME'">{{ e.kind === 'INCOME' ? '+' : '−' }}{{ m(e.amount) }}</div>
-              @if (data.canEdit('BUDGET')) {<button class="icon-btn" type="button" (click)="data.remove(e)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button>}
+              @if (data.canEdit('BUDGET') && e.module === 'BUDGET') {<button class="icon-btn" type="button" (click)="data.remove(e)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button>}
             </li>
           }
         </ul>
@@ -105,7 +105,8 @@ export class BudgetPage {
   kind = 'EXPENSE'; cat = 'FOOD'; title = ''; amount: number | null = null; date = today();
   private month = today().substring(0, 7);
 
-  all = computed(() => this.data.list('BUDGET'));
+  /** Écritures du budget + factures payées (une facture payée est une dépense). */
+  all = computed(() => [...this.data.list('BUDGET'), ...billsAsExpenses(this.data.list('BILLS'))]);
   rows = computed(() => this.all().filter((e) => (e.date || '').startsWith(this.month)).sort((a, b) => (b.date || '').localeCompare(a.date || '')));
   income = computed(() => this.rows().filter((e) => e.kind === 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
   expense = computed(() => this.rows().filter((e) => e.kind !== 'INCOME').reduce((s, e) => s + Number(e.amount || 0), 0));
