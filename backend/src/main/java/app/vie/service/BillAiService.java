@@ -46,23 +46,105 @@ public class BillAiService {
 
     private final String url;
     private final String model;
+    private final String apiUrl;
+    private final String apiKey;
+    private final String apiModel;
+    private final boolean useApi;
     private final ObjectMapper mapper;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
-    public BillAiService(@Value("${app.ai.url:http://localhost:11434}") String url, @Value("${app.ai.model:gemma3:4b}") String model, ObjectMapper mapper) {
+    /**
+     * Deux fournisseurs d'IA possibles :
+     * - Ollama (gratuit, sur votre machine) : OLLAMA_URL, OLLAMA_MODEL ;
+     * - une API compatible OpenAI (Gemini, Groq, OpenRouter… avec leur offre gratuite) : AI_API_KEY, AI_MODEL, AI_API_URL.
+     * Si AI_API_KEY est renseignée, l'API est utilisée à la place d'Ollama.
+     */
+    public BillAiService(@Value("${app.ai.url:http://localhost:11434}") String url, @Value("${app.ai.model:gemma3:4b}") String model,
+                         @Value("${app.ai.api-url:https://generativelanguage.googleapis.com/v1beta/openai}") String apiUrl,
+                         @Value("${app.ai.api-key:}") String apiKey, @Value("${app.ai.api-model:}") String apiModel, ObjectMapper mapper) {
         this.url = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
         this.model = model;
+        apiUrl = apiUrl == null || apiUrl.isBlank() ? "https://generativelanguage.googleapis.com/v1beta/openai" : apiUrl.trim();
+        this.apiUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) : apiUrl;
+        this.apiKey = apiKey == null ? "" : apiKey.trim();
+        this.apiModel = apiModel == null ? "" : apiModel.trim();
+        this.useApi = !this.apiKey.isEmpty();
         this.mapper = mapper;
     }
 
-    /** Vrai si le serveur Ollama répond. */
+    /** Vrai si l'IA est utilisable : API configurée, ou serveur Ollama qui répond. */
     public boolean enabled() {
+        if (useApi) return !apiModel.isEmpty();
         try {
             HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/tags")).timeout(Duration.ofSeconds(2)).GET().build();
             return http.send(req, HttpResponse.BodyHandlers.discarding()).statusCode() / 100 == 2;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /** Envoie la question au fournisseur configuré et renvoie le texte de la réponse. */
+    private String chat(String prompt, String text, byte[] img) {
+        String content = text != null ? prompt + "\n\n" + text : prompt;
+        try {
+            return useApi ? chatApi(content, img, true) : chatOllama(content, img);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("IA : {}", e.toString());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
+        }
+    }
+
+    private String chatOllama(String content, byte[] img) throws Exception {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("model", model);
+        body.put("stream", false);
+        body.put("format", "json");
+        body.putObject("options").put("temperature", 0).put("num_ctx", 8192);
+        ObjectNode msg = body.putArray("messages").addObject();
+        msg.put("role", "user");
+        msg.put("content", content);
+        if (img != null) msg.putArray("images").add(Base64.getEncoder().encodeToString(img));
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/chat")).timeout(Duration.ofSeconds(300))
+                .header("content-type", "application/json").POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
+        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+        if (res.statusCode() / 100 != 2) {
+            log.warn("Ollama : HTTP {} {}", res.statusCode(), res.body().length() > 300 ? res.body().substring(0, 300) : res.body());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
+        }
+        return mapper.readTree(res.body()).path("message").path("content").asText("");
+    }
+
+    private static String mime(byte[] b) {
+        if (b.length > 3 && (b[0] & 0xff) == 0x89 && b[1] == 'P') return "image/png";
+        if (b.length > 11 && b[0] == 'R' && b[1] == 'I' && b[8] == 'W') return "image/webp";
+        return "image/jpeg";
+    }
+
+    /** Format « chat/completions » d'OpenAI, repris par Gemini, Groq, OpenRouter… */
+    private String chatApi(String content, byte[] img, boolean jsonMode) throws Exception {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("model", apiModel);
+        body.put("temperature", 0);
+        if (jsonMode) body.putObject("response_format").put("type", "json_object");
+        ObjectNode msg = body.putArray("messages").addObject();
+        msg.put("role", "user");
+        ArrayNode parts = msg.putArray("content");
+        parts.addObject().put("type", "text").put("text", content);
+        if (img != null) parts.addObject().put("type", "image_url").putObject("image_url").put("url", "data:" + mime(img) + ";base64," + Base64.getEncoder().encodeToString(img));
+        HttpRequest req = HttpRequest.newBuilder(URI.create(apiUrl + "/chat/completions")).timeout(Duration.ofSeconds(120))
+                .header("content-type", "application/json").header("authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
+        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+        int code = res.statusCode();
+        if (code == 429) throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "ERR_AI_BUSY");
+        if (code == 400 && jsonMode) return chatApi(content, img, false); // certains fournisseurs refusent le mode JSON
+        if (code / 100 != 2) {
+            log.warn("API IA : HTTP {} {}", code, res.body().length() > 300 ? res.body().substring(0, 300) : res.body());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
+        }
+        return mapper.readTree(res.body()).path("choices").path(0).path("message").path("content").asText("");
     }
 
     public Map<String, Object> extract(byte[] data, String contentType) {
@@ -88,30 +170,7 @@ public class BillAiService {
             } else {
                 img = data;
             }
-            ObjectNode body = mapper.createObjectNode();
-            body.put("model", model);
-            body.put("stream", false);
-            body.put("format", "json");
-            body.putObject("options").put("temperature", 0);
-            ObjectNode msg = body.putArray("messages").addObject();
-            msg.put("role", "user");
-            if (text != null) msg.put("content", PROMPT + "\n\nTexte de la facture :\n" + text);
-            else {
-                msg.put("content", PROMPT);
-                ArrayNode imgs = msg.putArray("images");
-                imgs.add(Base64.getEncoder().encodeToString(img));
-            }
-            HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/chat"))
-                    .timeout(Duration.ofSeconds(180))
-                    .header("content-type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
-                    .build();
-            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
-            if (res.statusCode() / 100 != 2) {
-                log.warn("Ollama : HTTP {} {}", res.statusCode(), res.body().length() > 300 ? res.body().substring(0, 300) : res.body());
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
-            }
-            String answer = mapper.readTree(res.body()).path("message").path("content").asText("");
+            String answer = chat(PROMPT, text != null ? "Texte de la facture :\n" + text : null, img);
             int a = answer.indexOf('{'), b = answer.lastIndexOf('}');
             if (a < 0 || b <= a) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
             JsonNode j = mapper.readTree(answer.substring(a, b + 1));
@@ -134,27 +193,7 @@ public class BillAiService {
     /** Question libre au modèle (texte et/ou image), réponse JSON brute. Utilisé aussi pour lire les prospectus. */
     public String ask(String prompt, String text, byte[] img) {
         if (!enabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "ERR_AI_UNAVAILABLE");
-        try {
-            ObjectNode body = mapper.createObjectNode();
-            body.put("model", model);
-            body.put("stream", false);
-            body.put("format", "json");
-            body.putObject("options").put("temperature", 0).put("num_ctx", 8192);
-            ObjectNode msg = body.putArray("messages").addObject();
-            msg.put("role", "user");
-            msg.put("content", text != null ? prompt + "\n\n" + text : prompt);
-            if (img != null) msg.putArray("images").add(Base64.getEncoder().encodeToString(img));
-            HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/chat")).timeout(Duration.ofSeconds(300))
-                    .header("content-type", "application/json").POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
-            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
-            if (res.statusCode() / 100 != 2) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
-            return mapper.readTree(res.body()).path("message").path("content").asText("");
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            log.warn("Ollama : {}", e.toString());
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
-        }
+        return chat(prompt, text, img);
     }
 
     private static String clean(JsonNode n, int max) {

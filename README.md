@@ -43,6 +43,22 @@ Seul l'administrateur publie : `PROMO_ADMINS` (e-mails séparés par des virgule
 Magasins acceptés (Luxembourg uniquement) : Cactus, Naturata, Delhaize, Lidl, Aldi. Un prospectus PDF est lu page par page (6 pages au maximum) et la photo de chaque produit est découpée dans la page ; pour de meilleurs découpages, utilisez un modèle vision plus précis : `ollama pull qwen2.5vl:7b` puis `OLLAMA_MODEL=qwen2.5vl:7b`.
 L'IA ne consulte pas Internet : les prix viennent des documents que vous importez. Les offres expirées disparaissent automatiquement.
 
+## IA gratuite en ligne (Gemini, Groq, OpenRouter…) au lieu d'Ollama
+
+Sur Render, Ollama ne peut pas tourner. Utilisez plutôt l'offre gratuite d'un fournisseur d'IA (limites à vérifier chez eux, elles changent) : créez une clé API, puis renseignez ces variables (backend en local ou sur Render). Dès que `AI_API_KEY` est définie, l'API remplace Ollama.
+
+| Fournisseur | `AI_API_URL` | `AI_MODEL` |
+|---|---|---|
+| Google Gemini (AI Studio) | `https://generativelanguage.googleapis.com/v1beta/openai` (par défaut) | un modèle Gemini Flash, voir https://ai.google.dev/gemini-api/docs/models |
+| Groq | `https://api.groq.com/openai/v1` | un modèle « vision », voir https://console.groq.com/docs/vision |
+| OpenRouter | `https://openrouter.ai/api/v1` | un modèle gratuit marqué « :free » avec entrée image |
+
+Test en local (PowerShell) :
+```
+$env:AI_API_KEY="votre_cle"; $env:AI_MODEL="nom_du_modele"; mvn spring-boot:run
+```
+Les boutons d'import (factures, promos) apparaissent seulement quand une IA est disponible. Les documents envoyés partent chez le fournisseur : à éviter pour des factures sensibles si cela vous gêne.
+
 ## Stack
 
 - **Backend** : Java 21, Spring Boot 3.3, JPA/Hibernate, JWT, PostgreSQL (tables préfixées `vie_simplifiee_`)

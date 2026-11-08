@@ -68,7 +68,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
       }
     </div>
 
-    @if (canPublish() && aiEnabled) {
+    @if (canPublish() && aiOn()) {
     <div class="card stack" style="margin-top:1rem">
       <h2>{{ 'px.import' | t }}</h2>
       <p class="muted small">{{ 'px.importHint' | t }}</p>
@@ -155,8 +155,8 @@ export class PricesPage implements OnInit {
   storeList = STORES;
   offers = signal<OfferView[]>([]);
   lines = signal<Line[]>([]);
-  /** Import de prospectus par l'IA : masqué pour l'instant (mettre true pour le réactiver). */
-  aiEnabled = false;
+  /** Import par IA : visible seulement si une IA répond (Ollama ou API configurée). */
+  aiOn = signal(false);
   canPublish = signal(false);
   mStore = ''; mProduct = ''; mPrice: number | null = null; mUntil = ''; mPhoto = '';
   busy = signal(false);
@@ -201,6 +201,7 @@ export class PricesPage implements OnInit {
 
   ngOnInit() {
     this.api.get<OfferView[]>('/offers').subscribe({ next: (o) => this.offers.set(o) });
+    this.api.get<{ enabled: boolean }>('/ai/status').subscribe({ next: (r) => this.aiOn.set(!!r.enabled), error: () => undefined });
     this.api.get<{ canPublish: boolean }>('/offers/can-publish').subscribe({ next: (r) => this.canPublish.set(r.canPublish), error: () => undefined });
   }
 

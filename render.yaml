@@ -15,7 +15,13 @@ services:
         sync: false
       - key: JWT_SECRET      # 32 caractères minimum
         generateValue: true
-      - key: OLLAMA_URL          # facultatif : adresse d'un serveur Ollama (import de factures par IA)
+      - key: AI_API_KEY          # facultatif : clé d une API d IA gratuite (Gemini, Groq…) pour l import par IA
+        sync: false
+      - key: AI_MODEL
+        sync: false
+      - key: AI_API_URL
+        sync: false
+      - key: OLLAMA_URL          # facultatif : adresse d un serveur Ollama (à la place de l API)
         sync: false
       - key: CORS_ORIGINS    # URL du front (facultatif pour *.netlify.app)
         sync: false
