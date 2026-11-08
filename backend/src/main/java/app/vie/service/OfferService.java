@@ -43,6 +43,12 @@ public class OfferService {
     public void add(String store, LocalDate until, Long publisherId, List<Line> lines) {
         for (Line l : lines) {
             if (l.product() == null || l.product().isBlank() || l.price() == null || l.price() <= 0) continue;
+            // Même produit dans le même magasin : on remplace l'ancienne ligne au lieu d'en créer une deuxième
+            List<Long> same = offers.findByStoreIgnoreCaseAndProductIgnoreCase(store, l.product().trim()).stream().map(x -> x.id).toList();
+            if (!same.isEmpty()) {
+                photos.deleteByOfferIdIn(same);
+                offers.deleteAllById(same);
+            }
             Offer o = new Offer();
             o.userId = publisherId;
             o.store = store;

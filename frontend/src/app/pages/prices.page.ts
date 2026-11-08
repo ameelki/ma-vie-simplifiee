@@ -47,11 +47,11 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
         <div style="overflow-x:auto">
           <table class="tbl" style="width:100%;border-collapse:collapse">
             <thead><tr><th style="text-align:left">{{ 'shop.item' | t }}</th>
-              @for (s of stores(); track s) {<th style="text-align:right">{{ s }}</th>}</tr></thead>
+              @for (s of shown(); track s) {<th style="text-align:right">{{ s }}</th>}</tr></thead>
             <tbody>
               @for (r of rows(); track r.item) {
                 <tr><td>{{ r.item }}</td>
-                  @for (s of stores(); track s) {
+                  @for (s of shown(); track s) {
                     <td style="text-align:right" [style.font-weight]="r.min !== null && r.cells[s] === r.min ? 700 : 400"
                         [style.color]="r.min !== null && r.cells[s] === r.min ? 'var(--green)' : 'inherit'">
                       {{ r.cells[s] !== undefined ? fmt(r.cells[s]) : '—' }}</td>
@@ -60,7 +60,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
               }
             </tbody>
             <tfoot><tr><th style="text-align:left">{{ 'px.total' | t }}</th>
-              @for (s of stores(); track s) {<th style="text-align:right">{{ fmt(totals()[s].total) }} <span class="muted small">({{ totals()[s].count }}/{{ listItems().length }})</span></th>}</tr></tfoot>
+              @for (s of shown(); track s) {<th style="text-align:right">{{ fmt(totals()[s].total) }} <span class="muted small">({{ totals()[s].count }}/{{ listItems().length }})</span></th>}</tr></tfoot>
           </table>
         </div>
         @if (mixTotal() !== null) {<p>{{ 'px.mix' | t: { total: fmt(mixTotal()!) } }}</p>}
@@ -164,9 +164,14 @@ export class PricesPage implements OnInit {
   file: Blob | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
 
-  listItems = computed(() => this.data.list('SHOPPING').filter((e) => e.kind !== 'MEAL' && !e.done).map((e) => e.title));
+  listItems = computed(() => {
+    const seen = new Set<string>();
+    return this.data.list('SHOPPING').filter((e) => e.kind !== 'MEAL' && !e.done).map((e) => e.title.trim()).filter((t) => { const k = norm(t); if (!k || seen.has(k)) return false; seen.add(k); return true; });
+  });
   stores = computed(() => [...new Set(this.offers().map((o) => o.store))].sort());
   storeNames = this.stores;
+  /** Colonnes du tableau : seulement les magasins qui ont au moins un article de ma liste. */
+  shown = computed(() => this.stores().filter((s) => this.rows().some((r) => r.cells[s] !== undefined)));
   keptCount = computed(() => this.lines().filter((l) => l.keep && l.product.trim() && l.price > 0).length);
 
   /** Pour chaque article de la liste, le prix le plus bas trouvé dans chaque magasin. */

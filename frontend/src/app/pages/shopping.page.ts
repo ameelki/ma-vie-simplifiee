@@ -117,7 +117,9 @@ export class ShoppingPage implements OnInit {
   });
   /** Pendant la saisie d'un article : offres correspondantes. */
   suggest() { return this.item.trim().length >= 3 ? matchOffers(this.item, this.offers()).sort((a, b) => a.price - b.price).slice(0, 3) : []; }
-  addPromo(p: OfferView) { this.data.create({ module: 'SHOPPING', title: p.product, kind: 'LIST', done: false }); }
+  addPromo(p: OfferView) {
+    if (this.items().some((e) => e.title.trim().toLowerCase() === p.product.trim().toLowerCase())) return;
+    this.data.create({ module: 'SHOPPING', title: p.product, kind: 'LIST', done: false }); }
   days = DAYS;
   item = '';
   mealText: Record<string, string> = {};
