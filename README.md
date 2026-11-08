@@ -62,18 +62,3 @@ Le plan gratuit de Render s'endort après ~15 min ; un moniteur (UptimeRobot) su
 ## Logo
 
 `frontend/src/assets/` : `logo.svg` (horizontal), `logo-mark.svg`, `favicon.svg` et exports PNG.
-
-## E-mails gratuits en local (Mailpit)
-
-Un faux serveur SMTP reçoit tous les e-mails : rien ne sort sur Internet, aucun compte nécessaire.
-
-```bash
-docker run -d --name mailpit -p 1025:1025 -p 8025:8025 axllent/mailpit
-```
-
-- Boîte de réception : http://localhost:8025
-- E-mail de bienvenue envoyé à l'inscription (langue de l'utilisateur).
-- Profil > « M'envoyer mon résumé par e-mail » : factures proches, rendez-vous du jour, tâches, documents.
-- Résumé automatique chaque jour à 8 h : `MAIL_DIGEST=true`.
-- Désactiver les envois : `MAIL_ENABLED=false`. Si Mailpit n'est pas lancé, l'application fonctionne normalement (l'envoi échoue en silence).
-- En ligne (Render), les ports SMTP sont bloqués : il faudrait une API HTTP (ex. Brevo).

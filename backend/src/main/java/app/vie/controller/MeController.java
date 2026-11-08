@@ -5,7 +5,6 @@ import app.vie.entity.User;
 import app.vie.repository.UserRepository;
 import app.vie.service.AccessService;
 import app.vie.service.Errors;
-import app.vie.service.ReminderMailJob;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,10 +19,8 @@ public class MeController {
     private final UserRepository users;
     private final AccessService access;
     private final PasswordEncoder encoder;
-    private final ReminderMailJob reminders;
 
-    public MeController(CurrentUser current, UserRepository users, AccessService access, PasswordEncoder encoder, ReminderMailJob reminders) {
-        this.reminders = reminders;
+    public MeController(CurrentUser current, UserRepository users, AccessService access, PasswordEncoder encoder) {
         this.encoder = encoder;
         this.current = current;
         this.users = users;
@@ -57,13 +54,6 @@ public class MeController {
         if (!encoder.matches(r.current(), u.passwordHash)) throw Errors.bad("ERR_BAD_CREDENTIALS");
         u.passwordHash = encoder.encode(r.password());
         users.save(u);
-    }
-
-    /** Envoie mon résumé par e-mail (en local : à lire sur http://localhost:8025). */
-    @PostMapping("/test-mail")
-    public java.util.Map<String, Object> testMail(Authentication auth) {
-        User u = me(current, auth);
-        return java.util.Map.of("sent", true, "items", reminders.sendNow(u));
     }
 
     /** Les membres de ma famille dont je peux ouvrir au moins un menu. */

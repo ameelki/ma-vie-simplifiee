@@ -166,10 +166,6 @@ const R: Record<string, Row> = {
   'pr.title': ['Mon profil', 'My profile', 'Mein Profil', 'O meu perfil'],
   'pr.saved': ['Profil enregistré', 'Profile saved', 'Profil gespeichert', 'Perfil guardado'],
   'pr.data': ['Mes données', 'My data', 'Meine Daten', 'Os meus dados'],
-  'pr.mail': ['M’envoyer mon résumé par e-mail', 'E-mail me my summary', 'Meine Übersicht per E-Mail senden', 'Enviar-me o resumo por e-mail'],
-  'pr.mailHint': ['En local, ouvrez Mailpit sur http://localhost:8025 pour lire le message.', 'Locally, open Mailpit at http://localhost:8025 to read the message.', 'Lokal öffnen Sie Mailpit unter http://localhost:8025, um die Nachricht zu lesen.', 'Em local, abra o Mailpit em http://localhost:8025 para ler a mensagem.'],
-  'pr.mailSent': ['E-mail envoyé', 'E-mail sent', 'E-Mail gesendet', 'E-mail enviado'],
-  'pr.mailErr': ['Envoi impossible', 'Could not send', 'Senden nicht möglich', 'Não foi possível enviar'],
   'pr.demo': ['Ajouter des données d’exemple', 'Add sample data', 'Beispieldaten hinzufügen', 'Adicionar dados de exemplo'],
 
   'fam.title': ['Ma famille', 'My family', 'Meine Familie', 'A minha família'],
