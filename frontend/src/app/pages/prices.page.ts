@@ -108,6 +108,28 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
     </div>
     }
 
+    @if (canPublish()) {
+    <div class="card stack" style="margin-top:1rem">
+      <h2>{{ 'px.manual' | t }}</h2>
+      <div class="row">
+        <label class="grow">{{ 'px.store' | t }}
+          <select class="in" name="mstore" [(ngModel)]="mStore"><option value="">—</option>@for (s of storeList; track s) {<option [value]="s">{{ s }}</option>}</select></label>
+        <label class="grow">{{ 'px.product' | t }} <input class="in" name="mproduct" [(ngModel)]="mProduct"></label>
+      </div>
+      <div class="row">
+        <label>{{ 'px.price' | t }} <input class="in" type="number" step="0.01" min="0" name="mprice" [(ngModel)]="mPrice" style="width:7rem"></label>
+        <label>{{ 'px.until' | t }} <input class="in" type="date" name="muntil" [(ngModel)]="mUntil" style="width:auto"></label>
+        <label class="btn ghost" style="cursor:pointer">{{ 'px.photo' | t }}
+          <input type="file" accept="image/*" hidden (change)="onPhoto($any($event.target))"></label>
+        @if (mPhoto) {<img [src]="'data:image/jpeg;base64,' + mPhoto" alt="" width="48" height="48" style="object-fit:cover;border-radius:8px">}
+      </div>
+      <div class="row">
+        <button class="btn" type="button" [disabled]="!mStore || !mProduct.trim() || !mPrice" (click)="addOne()">{{ 'px.add' | t }}</button>
+        <button class="btn ghost" type="button" (click)="demo()">{{ 'px.demo' | t }}</button>
+      </div>
+    </div>
+    }
+
     <div class="card stack" style="margin-top:1rem">
       <h2>{{ 'px.saved' | t }}</h2>
       @if (!offers().length) {<div class="empty">{{ 'px.promoNone' | t }}</div>}
@@ -134,6 +156,7 @@ export class PricesPage implements OnInit {
   offers = signal<OfferView[]>([]);
   lines = signal<Line[]>([]);
   canPublish = signal(false);
+  mStore = ''; mProduct = ''; mPrice: number | null = null; mUntil = ''; mPhoto = '';
   busy = signal(false);
   seconds = signal(0);
   error = signal('');
@@ -226,6 +249,29 @@ export class PricesPage implements OnInit {
       next: (o) => { this.offers.set(o); this.lines.set([]); this.file = null; this.fileName = ''; this.pasted = ''; this.toast.show(this.i18n.t('fam.saved')); },
       error: (e) => this.error.set(errCode(e)),
     });
+  }
+
+  async onPhoto(input: HTMLInputElement) {
+    const f = input.files?.[0];
+    input.value = '';
+    if (!f) return;
+    const b = await compressImage(f, 220, 0.8);
+    const buf = new Uint8Array(await b.arrayBuffer());
+    let bin = '';
+    buf.forEach((c) => (bin += String.fromCharCode(c)));
+    this.mPhoto = btoa(bin);
+  }
+
+  addOne() {
+    this.error.set('');
+    this.api.post<OfferView[]>('/offers/one', { store: this.mStore, validUntil: this.mUntil || null, offers: [{ product: this.mProduct.trim(), price: Number(this.mPrice), unit: null, photo: this.mPhoto || null }] }).subscribe({
+      next: (o) => { this.offers.set(o); this.mProduct = ''; this.mPrice = null; this.mPhoto = ''; this.toast.show(this.i18n.t('fam.saved')); },
+      error: (e) => this.error.set(errCode(e)),
+    });
+  }
+
+  demo() {
+    this.api.post<OfferView[]>('/offers/demo').subscribe({ next: (o) => this.offers.set(o), error: (e) => this.error.set(errCode(e)) });
   }
 
   refresh() {

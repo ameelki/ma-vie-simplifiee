@@ -5,6 +5,7 @@ import app.vie.entity.OfferPhoto;
 import app.vie.entity.User;
 import app.vie.repository.OfferPhotoRepository;
 import app.vie.repository.OfferRepository;
+import app.vie.repository.UserRepository;
 import app.vie.service.Errors;
 import app.vie.service.OfferAiService;
 import app.vie.service.OfferService;
@@ -39,9 +40,11 @@ public class OfferController {
     private final OfferService service;
     private final PromoFeedJob feed;
     private final List<String> admins;
+    private final UserRepository users;
 
     public OfferController(CurrentUser current, OfferRepository offerRepo, OfferPhotoRepository photos, OfferAiService ai, OfferService service,
-                           PromoFeedJob feed, @Value("${app.promo.admins:}") String admins) {
+                           PromoFeedJob feed, UserRepository users, @Value("${app.promo.admins:}") String admins) {
+        this.users = users;
         this.current = current;
         this.offerRepo = offerRepo;
         this.photos = photos;
@@ -54,7 +57,9 @@ public class OfferController {
     public record SaveRequest(String store, String validUntil, List<OfferService.Line> offers) {}
 
     private boolean publisher(User u) {
-        return u.role == app.vie.entity.Enums.Role.ADMIN || admins.contains(u.email.toLowerCase());
+        if (u.role == app.vie.entity.Enums.Role.ADMIN || admins.contains(u.email.toLowerCase())) return true;
+        // Le premier compte créé (le propriétaire de l'application) peut toujours publier.
+        return users.findFirstByOrderByIdAsc().map(f -> f.id.equals(u.id)).orElse(false);
     }
 
     private User publisherOnly(Authentication auth) {
@@ -94,6 +99,31 @@ public class OfferController {
         if (r.offers() == null || r.offers().isEmpty()) throw Errors.bad("ERR_VALIDATION");
         LocalDate until = r.validUntil() != null && r.validUntil().matches("\\d{4}-\\d{2}-\\d{2}") ? LocalDate.parse(r.validUntil()) : null;
         service.replaceStore(store, until, me.id, r.offers());
+        return service.current();
+    }
+
+    /** Ajoute une offre à la main (sans toucher aux autres offres du magasin). */
+    @PostMapping("/one")
+    public List<Offer> addOne(@RequestBody SaveRequest r, Authentication auth) {
+        User me = publisherOnly(auth);
+        String store = OfferAiService.canonicalStore(r.store());
+        if (store == null) throw Errors.bad("ERR_STORE");
+        if (r.offers() == null || r.offers().size() != 1 || r.offers().get(0).price() == null || r.offers().get(0).price() <= 0
+                || r.offers().get(0).product() == null || r.offers().get(0).product().isBlank()) throw Errors.bad("ERR_VALIDATION");
+        LocalDate until = r.validUntil() != null && r.validUntil().matches("\\d{4}-\\d{2}-\\d{2}") ? LocalDate.parse(r.validUntil()) : LocalDate.now().plusDays(7);
+        service.add(store, until, me.id, r.offers());
+        return service.current();
+    }
+
+    /** Quelques promos d'EXEMPLE (prix inventés, marquées « exemple ») pour voir à quoi ressemble la page. */
+    @PostMapping("/demo")
+    public List<Offer> demo(Authentication auth) {
+        User me = publisherOnly(auth);
+        LocalDate until = LocalDate.now().plusDays(7);
+        Object[][] d = {{"Cactus", "Lait demi-écrémé 1 L (exemple)", 0.99, "litre"}, {"Delhaize", "Pâtes spaghetti 500 g (exemple)", 0.79, "500 g"},
+                {"Lidl", "Bananes (exemple)", 1.29, "kg"}, {"Aldi", "Poulet entier (exemple)", 4.99, "pièce"}, {"Naturata", "Pommes bio (exemple)", 2.49, "kg"},
+                {"Lidl", "Lait demi-écrémé 1 L (exemple)", 0.89, "litre"}, {"Aldi", "Pâtes spaghetti 500 g (exemple)", 0.69, "500 g"}};
+        for (Object[] x : d) service.add((String) x[0], until, me.id, List.of(new OfferService.Line((String) x[1], (Double) x[2], (String) x[3], null)));
         return service.current();
     }
 

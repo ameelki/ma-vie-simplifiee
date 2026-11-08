@@ -35,6 +35,12 @@ public class OfferService {
         List<Long> old = offers.findByStore(store).stream().map(o -> o.id).toList();
         if (!old.isEmpty()) photos.deleteByOfferIdIn(old);
         offers.deleteByStore(store);
+        add(store, until, publisherId, lines);
+    }
+
+    /** Ajoute des offres sans toucher à celles qui existent déjà (saisie manuelle). */
+    @Transactional
+    public void add(String store, LocalDate until, Long publisherId, List<Line> lines) {
         for (Line l : lines) {
             if (l.product() == null || l.product().isBlank() || l.price() == null || l.price() <= 0) continue;
             Offer o = new Offer();
