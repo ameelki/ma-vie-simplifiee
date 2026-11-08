@@ -38,7 +38,7 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
       </div>
     } @else {
       <div class="promo-banner"><div class="promo-head"><strong>{{ 'px.promoTitle' | t }}</strong>
-        <a routerLink="/prix">{{ 'px.promoImport' | t }}</a></div></div>
+        <a routerLink="/prix">{{ 'px.promoAll' | t }}</a></div><span class="muted small">{{ 'px.promoNone' | t }}</span></div>
     }
     <div class="grid two">
       <div class="card">

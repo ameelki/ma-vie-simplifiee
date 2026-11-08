@@ -68,6 +68,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
       }
     </div>
 
+    @if (canPublish()) {
     <div class="card stack" style="margin-top:1rem">
       <h2>{{ 'px.import' | t }}</h2>
       <p class="muted small">{{ 'px.importHint' | t }}</p>
@@ -103,11 +104,13 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
         </ul>
         <button class="btn" type="button" (click)="save()">{{ 'px.save' | t: { n: keptCount() } }}</button>
       }
+      <button class="btn ghost" type="button" (click)="refresh()">{{ 'px.refresh' | t }}</button>
     </div>
+    }
 
     <div class="card stack" style="margin-top:1rem">
       <h2>{{ 'px.saved' | t }}</h2>
-      @if (!offers().length) {<div class="empty">{{ 'c.empty' | t }}</div>}
+      @if (!offers().length) {<div class="empty">{{ 'px.promoNone' | t }}</div>}
       @for (s of storeNames(); track s) {
         <h3>{{ s }}</h3>
         <ul class="list">
@@ -115,7 +118,7 @@ const stem = (w: string) => (w.length > 4 && /[sx]$/.test(w) ? w.slice(0, -1) : 
             <li class="item">@if (o.hasPhoto) {<app-offer-photo [id]="o.id" [size]="56" />}<div class="grow">{{ o.product }}@if (o.unit) { <span class="muted small">· {{ o.unit }}</span>}</div>
               <strong>{{ fmt(o.price) }}</strong>
               @if (o.validUntil) {<span class="muted small">{{ 'px.until' | t }} {{ d(o.validUntil) }}</span>}
-              <button class="icon-btn" type="button" (click)="remove(o)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button></li>
+              @if (canPublish()) {<button class="icon-btn" type="button" (click)="remove(o)" [attr.aria-label]="'c.delete' | t"><app-icon name="trash" [size]="18" /></button>}</li>
           }
         </ul>
       }
@@ -130,6 +133,7 @@ export class PricesPage implements OnInit {
   storeList = STORES;
   offers = signal<OfferView[]>([]);
   lines = signal<Line[]>([]);
+  canPublish = signal(false);
   busy = signal(false);
   seconds = signal(0);
   error = signal('');
@@ -167,6 +171,7 @@ export class PricesPage implements OnInit {
 
   ngOnInit() {
     this.api.get<OfferView[]>('/offers').subscribe({ next: (o) => this.offers.set(o) });
+    this.api.get<{ canPublish: boolean }>('/offers/can-publish').subscribe({ next: (r) => this.canPublish.set(r.canPublish), error: () => undefined });
   }
 
   fmt(v: number) { return money(this.i18n, v); }
@@ -219,6 +224,13 @@ export class PricesPage implements OnInit {
     const offers = this.lines().filter((l) => l.keep && l.product.trim() && l.price > 0).map((l) => ({ product: l.product.trim(), price: Number(l.price), unit: l.unit ?? null, photo: l.photo ?? null }));
     this.api.post<OfferView[]>('/offers', { store: this.store.trim(), validUntil: this.until || null, offers }).subscribe({
       next: (o) => { this.offers.set(o); this.lines.set([]); this.file = null; this.fileName = ''; this.pasted = ''; this.toast.show(this.i18n.t('fam.saved')); },
+      error: (e) => this.error.set(errCode(e)),
+    });
+  }
+
+  refresh() {
+    this.api.post<{ stores: number }>('/offers/refresh').subscribe({
+      next: (r) => { this.toast.show(this.i18n.t('px.refreshed', { n: r.stores })); this.ngOnInit(); },
       error: (e) => this.error.set(errCode(e)),
     });
   }

@@ -38,6 +38,8 @@ PDF : le texte est lu directement ; un scan est converti en image. Le plan gratu
 ## Prix et offres des supermarchés (IA)
 
 Courses > « Comparer les prix ». Chaque semaine, importez le prospectus d'un magasin (PDF, photo ou texte collé) : l'IA locale (Ollama) en extrait les produits et les prix, vous vérifiez, puis l'application compare avec votre liste de courses et indique le supermarché le plus avantageux (et le total en achetant chaque article au meilleur prix).
+Les promos sont **communes à tous** : les utilisateurs n'ont rien à chercher ni à saisir, ils voient seulement les produits en promo (bandeau sur Courses + page « Comparer les prix »).
+Seul l'administrateur publie : `PROMO_ADMINS` (e-mails séparés par des virgules, par défaut votre adresse) ou un compte de rôle ADMIN. Pour automatiser, `PROMO_FEEDS="Cactus|https://…/prospectus.pdf;Lidl|https://…"` : chaque lundi à 7 h les prospectus sont téléchargés et lus par l'IA (les adresses changent souvent, à mettre à jour ; Ollama doit tourner).
 Magasins acceptés (Luxembourg uniquement) : Cactus, Naturata, Delhaize, Lidl, Aldi. Un prospectus PDF est lu page par page (6 pages au maximum) et la photo de chaque produit est découpée dans la page ; pour de meilleurs découpages, utilisez un modèle vision plus précis : `ollama pull qwen2.5vl:7b` puis `OLLAMA_MODEL=qwen2.5vl:7b`.
 L'IA ne consulte pas Internet : les prix viennent des documents que vous importez. Les offres expirées disparaissent automatiquement.
 

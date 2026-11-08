@@ -135,7 +135,7 @@ const R: Record<string, Row> = {
 
   'px.open': ['Comparer les prix', 'Compare prices', 'Preise vergleichen', 'Comparar preços'],
   'px.title': ['Prix et offres', 'Prices and deals', 'Preise und Angebote', 'Preços e ofertas'],
-  'px.sub': ['Trouvez le supermarché le moins cher pour votre liste de courses.', 'Find the cheapest supermarket for your shopping list.', 'Finden Sie den günstigsten Supermarkt für Ihre Einkaufsliste.', 'Descubra o supermercado mais barato para a sua lista de compras.'],
+  'px.sub': ['Les promos des supermarchés du Luxembourg, mises à jour pour tout le monde : rien à chercher, rien à saisir.', 'Deals from Luxembourg supermarkets, updated for everyone: nothing to search, nothing to type.', 'Angebote luxemburgischer Supermärkte, für alle aktualisiert: nichts zu suchen, nichts einzugeben.', 'Promoções dos supermercados do Luxemburgo, atualizadas para todos: nada a procurar, nada a escrever.'],
   'px.compare': ['Comparaison avec ma liste', 'Comparison with my list', 'Vergleich mit meiner Liste', 'Comparação com a minha lista'],
   'px.noList': ['Ajoutez d’abord des articles à votre liste de courses.', 'First add items to your shopping list.', 'Fügen Sie zuerst Artikel zu Ihrer Einkaufsliste hinzu.', 'Adicione primeiro artigos à sua lista de compras.'],
   'px.noOffers': ['Aucune offre enregistrée : importez un prospectus ci-dessous.', 'No deals saved yet: import a flyer below.', 'Noch keine Angebote gespeichert: Importieren Sie unten einen Prospekt.', 'Ainda não há ofertas: importe um folheto abaixo.'],
@@ -162,6 +162,8 @@ const R: Record<string, Row> = {
   'px.promoFor': ['Promos pour cet article :', 'Deals for this item:', 'Angebote für diesen Artikel:', 'Promoções para este artigo:'],
   'err.ERR_STORE': ['Choisissez un supermarché du Luxembourg : Cactus, Naturata, Delhaize, Lidl ou Aldi.', 'Choose a Luxembourg supermarket: Cactus, Naturata, Delhaize, Lidl or Aldi.', 'Wählen Sie einen Supermarkt in Luxemburg: Cactus, Naturata, Delhaize, Lidl oder Aldi.', 'Escolha um supermercado do Luxemburgo: Cactus, Naturata, Delhaize, Lidl ou Aldi.'],
   'px.lu': ['Promos des supermarchés du Luxembourg uniquement : Cactus, Naturata, Delhaize, Lidl, Aldi. Les photos des produits sont découpées dans le prospectus (6 pages lues au maximum).', 'Deals from Luxembourg supermarkets only: Cactus, Naturata, Delhaize, Lidl, Aldi. Product photos are cut out of the flyer (up to 6 pages read).', 'Nur Angebote luxemburgischer Supermärkte: Cactus, Naturata, Delhaize, Lidl, Aldi. Produktfotos werden aus dem Prospekt ausgeschnitten (höchstens 6 Seiten).', 'Apenas promoções de supermercados do Luxemburgo: Cactus, Naturata, Delhaize, Lidl, Aldi. As fotos dos produtos são recortadas do folheto (no máximo 6 páginas).'],
+  'px.refresh': ['Récupérer les prospectus automatiquement', 'Fetch flyers automatically', 'Prospekte automatisch abrufen', 'Obter folhetos automaticamente'],
+  'px.refreshed': ['{n} magasin(s) mis à jour', '{n} store(s) updated', '{n} Geschäft(e) aktualisiert', '{n} loja(s) atualizada(s)'],
   'shop.list': ['Liste de courses', 'Shopping list', 'Einkaufsliste', 'Lista de compras'],
   'shop.meals': ['Menu de la semaine', 'Weekly menu', 'Wochenmenü', 'Ementa da semana'],
   'shop.addItem': ['Ajouter un article', 'Add an item', 'Artikel hinzufügen', 'Adicionar artigo'],
