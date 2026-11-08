@@ -131,6 +131,32 @@ public class BillAiService {
         }
     }
 
+    /** Question libre au modèle (texte et/ou image), réponse JSON brute. Utilisé aussi pour lire les prospectus. */
+    public String ask(String prompt, String text, byte[] img) {
+        if (!enabled()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "ERR_AI_UNAVAILABLE");
+        try {
+            ObjectNode body = mapper.createObjectNode();
+            body.put("model", model);
+            body.put("stream", false);
+            body.put("format", "json");
+            body.putObject("options").put("temperature", 0).put("num_ctx", 8192);
+            ObjectNode msg = body.putArray("messages").addObject();
+            msg.put("role", "user");
+            msg.put("content", text != null ? prompt + "\n\n" + text : prompt);
+            if (img != null) msg.putArray("images").add(Base64.getEncoder().encodeToString(img));
+            HttpRequest req = HttpRequest.newBuilder(URI.create(url + "/api/chat")).timeout(Duration.ofSeconds(300))
+                    .header("content-type", "application/json").POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
+            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() / 100 != 2) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
+            return mapper.readTree(res.body()).path("message").path("content").asText("");
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Ollama : {}", e.toString());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "ERR_AI_FAILED");
+        }
+    }
+
     private static String clean(JsonNode n, int max) {
         if (n == null || n.isNull() || n.isMissingNode()) return null;
         String s = n.asText("").trim();

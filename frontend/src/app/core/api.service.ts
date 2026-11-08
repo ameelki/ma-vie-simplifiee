@@ -15,5 +15,6 @@ export class Api {
     form.append('file', file, filename);
     return this.http.post<T>(this.base + url, form);
   }
+  postForm<T>(url: string, form: FormData) { return this.http.post<T>(this.base + url, form); }
   del<T>(url: string) { return this.http.delete<T>(this.base + url); }
 }

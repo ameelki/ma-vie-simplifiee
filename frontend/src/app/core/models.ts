@@ -18,3 +18,4 @@ export interface Viewable { ownerId: number; name: string; modules: Record<strin
 
 export interface SubscriptionView { plan: 'FREE' | 'MONTHLY' | 'YEARLY'; trialEndsAt?: string | null; trialActive: boolean; trialUsed: boolean; trialDaysLeft: number; premium: boolean; }
 export interface Notif { id: number; kind: 'BILL' | 'EVENT' | 'TASK' | 'DOCUMENT'; title: string; dueDate?: string | null; amount?: number | null; readFlag: boolean; createdAt: string; }
+export interface OfferView { id: number; store: string; product: string; price: number; unit?: string | null; validUntil?: string | null; }

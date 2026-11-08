@@ -35,6 +35,11 @@ ollama serve                   # si le service n'est pas déjà lancé (port 114
 ```
 PDF : le texte est lu directement ; un scan est converti en image. Le plan gratuit de Render ne peut pas héberger Ollama : en ligne, pointez `OLLAMA_URL` vers une machine à vous (PC, serveur) ; sans serveur Ollama, la fonction affiche un message et le formulaire se remplit à la main.
 
+## Prix et offres des supermarchés (IA)
+
+Courses > « Comparer les prix ». Chaque semaine, importez le prospectus d'un magasin (PDF, photo ou texte collé) : l'IA locale (Ollama) en extrait les produits et les prix, vous vérifiez, puis l'application compare avec votre liste de courses et indique le supermarché le plus avantageux (et le total en achetant chaque article au meilleur prix).
+L'IA ne consulte pas Internet : les prix viennent des documents que vous importez. Les offres expirées disparaissent automatiquement.
+
 ## Stack
 
 - **Backend** : Java 21, Spring Boot 3.3, JPA/Hibernate, JWT, PostgreSQL (tables préfixées `vie_simplifiee_`)

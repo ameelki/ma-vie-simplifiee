@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DataService } from '../core/data.service';
 import { TPipe } from '../core/i18n.service';
 import { IconComponent } from '../shared/icon.component';
@@ -9,9 +10,10 @@ const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 @Component({
   selector: 'app-shopping',
   standalone: true,
-  imports: [FormsModule, TPipe, IconComponent],
+  imports: [FormsModule, RouterLink, TPipe, IconComponent],
   template: `
     <div class="page-head"><div><h1>{{ 'nav.shopping' | t }}</h1></div>
+      <a class="btn ghost" routerLink="/prix">{{ 'px.open' | t }}</a>
       @if (!data.canEdit('SHOPPING')) {<span class="pill">{{ 'c.viewonly' | t }}</span>}</div>
     @if (!data.can('SHOPPING')) {<div class="card empty">{{ 'c.noAccess' | t }}</div>} @else {
     <div class="grid two">
